@@ -5,9 +5,11 @@ import ProductCard from "@/components/ProductCard";
 import CategoryTiles from "@/components/CategoryTiles";
 import CatalogToolbar from "@/components/CatalogToolbar";
 import Pagination from "@/components/Pagination";
+import ShopGallery from "@/components/ShopGallery";
+import ShopMap from "@/components/ShopMap";
 import { getCategories, getFacets, getProducts, searchProducts, matchesGender } from "@/lib/products";
 import { getCurrentUser } from "@/lib/auth";
-import { site, whatsappLink } from "@/lib/site";
+import { site, whatsappLink, phoneLink } from "@/lib/site";
 import { GENDERS, HAIR_TYPES } from "@/lib/wig";
 
 export const metadata = {
@@ -142,6 +144,50 @@ function SalonTeaser({ image }) {
   );
 }
 
+function FindUs() {
+  if (!site.mapEmbed) return null;
+  const tel = phoneLink();
+  return (
+    <section className="container-x pt-20 sm:pt-24">
+      <p className="eyebrow">Visit</p>
+      <h2 className="mt-2 text-3xl font-medium sm:text-4xl">Find us</h2>
+      <div className="mt-8 grid gap-8 md:grid-cols-[1fr_2fr] md:gap-12">
+        <div className="text-sm">
+          {site.address && (
+            <>
+              <p className="eyebrow">Address</p>
+              <p className="mt-1.5 whitespace-pre-line leading-relaxed">{site.address}</p>
+            </>
+          )}
+          {site.hours.length > 0 && (
+            <>
+              <p className="eyebrow mt-5">Hours</p>
+              {site.hours.map((h) => (
+                <p key={h.days} className="mt-1.5">
+                  {h.days}, {h.time}
+                </p>
+              ))}
+            </>
+          )}
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row md:flex-col">
+            {site.mapUrl && (
+              <a href={site.mapUrl} target="_blank" rel="noopener noreferrer" className="btn-primary">
+                Get directions
+              </a>
+            )}
+            {tel && (
+              <a href={tel} className="btn-outline">
+                Call {site.phone}
+              </a>
+            )}
+          </div>
+        </div>
+        <ShopMap className="aspect-[4/3] md:aspect-auto md:min-h-[400px]" />
+      </div>
+    </section>
+  );
+}
+
 // Shown only to visitors who are not signed in.
 function JoinStrip() {
   return (
@@ -265,6 +311,14 @@ export default async function Home({ searchParams }) {
       </section>
 
       <SalonTeaser image={images.salon} />
+
+      <section className="container-x pt-20 sm:pt-24">
+        <p className="eyebrow">Gallery</p>
+        <h2 className="mt-2 text-3xl font-medium sm:text-4xl">Inside Blue Heaven</h2>
+        <ShopGallery photos={site.gallery} />
+      </section>
+
+      <FindUs />
 
       {isGuest && <JoinStrip />}
     </main>

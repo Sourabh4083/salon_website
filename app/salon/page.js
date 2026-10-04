@@ -2,6 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { site, whatsappLink, phoneLink } from "@/lib/site";
 import { formateCurrency } from "@/utils/formatCurrency";
+import ShopGallery from "@/components/ShopGallery";
+import ShopMap from "@/components/ShopMap";
 
 export const metadata = {
   title: "Unisex salon",
@@ -164,6 +166,20 @@ export default function SalonPage() {
           </p>
         </aside>
       </section>
+
+      <section className="container-x pt-20 sm:pt-24">
+        <p className="eyebrow">Gallery</p>
+        <h2 className="mt-2 text-3xl font-medium sm:text-4xl">Inside the salon</h2>
+        <ShopGallery photos={site.gallery.filter((photo) => photo.salon)} />
+      </section>
+
+      {site.mapEmbed && (
+        <section className="container-x pt-20 sm:pt-24">
+          <p className="eyebrow">Visit</p>
+          <h2 className="mt-2 text-3xl font-medium sm:text-4xl">Find us</h2>
+          <ShopMap className="mt-8 aspect-[4/3] sm:aspect-[21/9]" />
+        </section>
+      )}
     </main>
   );
 }
