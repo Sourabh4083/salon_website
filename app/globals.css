@@ -1,0 +1,217 @@
+@import "tailwindcss";
+
+/* ---------- Design tokens ----------
+   "Editorial boutique": ivory paper, navy ink, one muted gold. Flat colour,
+   hairline rules and near-square corners. No gradients, glass or glow. */
+:root {
+  --bg: #f7f3ec;
+  --surface: #ffffff;
+  --ink: #14233b;
+  --muted: #6b6558;
+  --line: #ded6c8;
+
+  --brand: #14233b;
+  /* Decorative gold: rules and marks only, never small text on white. */
+  --brand-2: #a8843f;
+  --brand-ink: #1f3a63;
+  /* Darker gold that passes contrast for labels and badges. */
+  --accent: #8a6a2b;
+  --success: #2f6b4f;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-2: var(--brand-2);
+  --color-brand-ink: var(--brand-ink);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
+
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-serif), "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+
+  /* Near-square corners everywhere. */
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 3px;
+  --radius-xl: 3px;
+  --radius-2xl: 4px;
+  --radius-3xl: 4px;
+
+  /* Neutrals are warmed to sit on ivory instead of the default cool greys. */
+  --color-slate-50: #faf7f1;
+  --color-slate-100: #f0ebe1;
+  --color-slate-200: #e4dccd;
+  --color-slate-300: #cfc5b2;
+  --color-slate-400: #a39a88;
+  --color-slate-500: #857c6c;
+  --color-slate-600: #6b6558;
+  --color-slate-700: #4a463d;
+  --color-slate-800: #2b2a26;
+  --color-slate-900: #1c1b19;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+::selection {
+  background: rgba(168, 132, 63, 0.3);
+}
+
+:focus-visible {
+  outline: 2px solid var(--brand-2);
+  outline-offset: 2px;
+}
+
+/* ---------- Reusable pieces ---------- */
+@layer components {
+  .container-x {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Serif for things that are not headings: product names, the wordmark. */
+  .display {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+
+  /* Small letter-spaced label above headings and on product cards. */
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase text-accent;
+    letter-spacing: 0.18em;
+  }
+
+  /* Short gold rule used under section headings. */
+  .rule {
+    @apply block h-px w-12 bg-brand-2;
+  }
+
+  .card {
+    @apply rounded-sm border border-line bg-surface;
+  }
+
+  .card-hover {
+    @apply transition-colors duration-300;
+  }
+  .card-hover:hover {
+    border-color: var(--ink);
+  }
+
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm px-5 py-3 text-sm font-semibold tracking-wide transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-ink bg-ink px-5 py-3 text-sm font-semibold tracking-wide text-white transition-colors duration-200 hover:bg-brand-ink disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-dark {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-ink bg-ink px-5 py-3 text-sm font-semibold tracking-wide text-white transition-colors duration-200 hover:bg-brand-ink disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-outline {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-ink bg-transparent px-5 py-3 text-sm font-semibold tracking-wide text-ink transition-colors duration-200 hover:bg-ink hover:text-white disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-ghost {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm px-5 py-3 text-sm font-semibold tracking-wide text-ink underline-offset-4 transition-colors duration-200 hover:underline disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  /* Underlined text link. */
+  .link {
+    @apply font-semibold text-ink underline decoration-brand-2 decoration-1 underline-offset-4 transition-colors hover:text-brand-ink;
+  }
+
+  .input {
+    @apply w-full rounded-sm border border-line bg-surface px-4 py-3 text-sm text-ink placeholder:text-slate-400 transition-colors focus:border-ink focus:outline-none;
+  }
+
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-slate-700;
+  }
+
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[11px] font-semibold uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  /* Add-to-cart bar on product cards: slides in on hover where hover
+     exists, and is simply always there on touch screens. */
+  @media (hover: hover) {
+    .quick-add {
+      opacity: 0;
+      transform: translateY(100%);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .group:hover .quick-add,
+    .group:focus-within .quick-add {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* ---------- Motion ---------- */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.delay-100 {
+  animation-delay: 0.1s;
+}
+.delay-200 {
+  animation-delay: 0.2s;
+}
+.delay-300 {
+  animation-delay: 0.3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .animate-fade-up {
+    animation: none;
+  }
+  .quick-add {
+    transition: none;
+  }
+}
+
+/* Hide scrollbar for horizontal chip rows */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
