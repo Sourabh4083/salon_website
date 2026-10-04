@@ -7,6 +7,7 @@ import { LogOut, ShoppingBag, Menu, X, Search, User, ChevronDown } from "lucide-
 import toast from "react-hot-toast";
 import { useEffect, useRef, useState } from "react";
 import { site, gstPercent } from "@/lib/site";
+import { LogoMark } from "@/components/Logo";
 import { formateCurrency } from "@/utils/formatCurrency";
 
 const PRIMARY_LINKS = [
@@ -122,6 +123,7 @@ function UserMenu({ user, onLogout }) {
 export default function Navbar({ categories = [] }) {
   const { totalItem, logout, user } = useCart();
   const [isOpen, setIsOpen] = useState(false);
+  const progressRef = useRef(null);
   const pathname = usePathname();
   const params = useSearchParams();
   const activeCategory = (params.get("category") || "").toLowerCase();
@@ -136,6 +138,28 @@ export default function Navbar({ categories = [] }) {
       document.body.style.overflow = "";
     };
   }, [isOpen]);
+
+  // Gold line along the bottom of the header that fills as the page scrolls.
+  useEffect(() => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const done = max > 0 ? Math.min(1, window.scrollY / max) : 0;
+      if (progressRef.current) progressRef.current.style.transform = `scaleX(${done})`;
+    };
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [pathname, params]);
 
   const handleLogout = async () => {
     await logout();
@@ -187,9 +211,7 @@ export default function Navbar({ categories = [] }) {
                 <Link
                   key={link.label}
                   href={link.href}
-                  className={`border-b py-1 transition-colors hover:border-brand-2 ${
-                    isActive(link) ? "border-brand-2" : "border-transparent"
-                  }`}
+                  className={`nav-link py-1 ${isActive(link) ? "is-active" : ""}`}
                 >
                   {link.label}
                 </Link>
@@ -198,11 +220,17 @@ export default function Navbar({ categories = [] }) {
           )}
         </div>
 
-        {/* Centre: wordmark */}
-        <Link href="/" className="text-center leading-none">
-          <span className="display block text-2xl font-medium sm:text-[28px]">{site.wordmark}</span>
-          <span className="mt-1 block text-[9px] font-semibold uppercase tracking-[0.28em] text-accent sm:text-[10px]">
-            {site.strapline}
+        {/* Centre: logo and wordmark */}
+        <Link href="/" className="group flex items-center gap-2.5 leading-none sm:gap-3">
+          <LogoMark
+            priority
+            className="h-10 w-auto transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-110 sm:h-12"
+          />
+          <span>
+            <span className="display block text-[22px] font-medium sm:text-[28px]">{site.wordmark}</span>
+            <span className="mt-1 block text-[8px] font-semibold uppercase tracking-[0.26em] text-accent sm:text-[10px] sm:tracking-[0.28em]">
+              {site.strapline}
+            </span>
           </span>
         </Link>
 
@@ -324,6 +352,12 @@ export default function Navbar({ categories = [] }) {
           </div>
         </div>
       )}
+
+      <span
+        ref={progressRef}
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-px left-0 h-0.5 w-full origin-left scale-x-0 bg-brand-2"
+      />
     </header>
   );
 }

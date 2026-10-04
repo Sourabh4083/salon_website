@@ -7,9 +7,13 @@ import CatalogToolbar from "@/components/CatalogToolbar";
 import Pagination from "@/components/Pagination";
 import ShopGallery from "@/components/ShopGallery";
 import ShopMap from "@/components/ShopMap";
+import HeroShowcase from "@/components/HeroShowcase";
+import Marquee from "@/components/Marquee";
+import Reveal from "@/components/Reveal";
 import { getCategories, getFacets, getProducts, searchProducts, matchesGender } from "@/lib/products";
 import { getCurrentUser } from "@/lib/auth";
 import { site, whatsappLink, phoneLink } from "@/lib/site";
+import { formateCurrency } from "@/utils/formatCurrency";
 import { GENDERS, HAIR_TYPES } from "@/lib/wig";
 
 export const metadata = {
@@ -22,51 +26,20 @@ function Frame({ src, alt, sizes, priority = false, label, className = "" }) {
   return (
     <div className={`relative overflow-hidden bg-ink ${className}`}>
       {src ? (
-        <Image src={src} alt={alt} fill sizes={sizes} priority={priority} className="object-cover" />
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes={sizes}
+          priority={priority}
+          className="object-cover transition duration-700 group-hover:scale-105"
+        />
       ) : (
         <div className="absolute inset-0 grid place-items-center p-6 text-center">
           <p className="display text-3xl italic text-white/25 sm:text-4xl">{label}</p>
         </div>
       )}
     </div>
-  );
-}
-
-function Hero({ image }) {
-  return (
-    <section className="border-b border-line">
-      <div className="container-x grid items-center gap-10 py-10 md:grid-cols-[1fr_0.9fr] md:gap-16 md:py-16">
-        <div className="order-2 md:order-1">
-          <p className="eyebrow animate-fade-up">{site.strapline}</p>
-          <h1 className="mt-4 text-[2.6rem] font-medium leading-[1.05] sm:text-6xl lg:text-7xl animate-fade-up delay-100">
-            Hair that looks
-            <br />
-            <em className="font-normal">like your own.</em>
-          </h1>
-          <p className="mt-6 max-w-md text-base leading-relaxed text-muted sm:text-lg animate-fade-up delay-200">
-            Wigs, hair patches and toppers for men and women. Choose online, or visit
-            the salon and we will fit and style it for you.
-          </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row animate-fade-up delay-300">
-            <Link href="/?gender=Men#products" className="btn-primary px-7">
-              Shop men&apos;s wigs
-            </Link>
-            <Link href="/?gender=Women#products" className="btn-outline px-7">
-              Shop women&apos;s wigs
-            </Link>
-          </div>
-        </div>
-
-        <Frame
-          src={image}
-          alt="A wig from the Blue Heaven collection"
-          sizes="(max-width: 768px) 100vw, 45vw"
-          priority
-          label={site.wordmark}
-          className="order-1 aspect-[4/5] md:order-2"
-        />
-      </div>
-    </section>
   );
 }
 
@@ -78,23 +51,31 @@ function WearerPanels({ men, women }) {
   return (
     <section className="container-x pt-16 sm:pt-20">
       <div className="grid gap-5 sm:grid-cols-2">
-        {panels.map((p) => (
-          <Link key={p.title} href={p.href} className="group block">
-            <Frame
-              src={p.src}
-              alt=""
-              sizes="(max-width: 640px) 100vw, 50vw"
-              label={p.title}
-              className="aspect-[4/3] sm:aspect-[4/5] lg:aspect-[5/4]"
-            />
-            <div className="mt-4 flex items-end justify-between gap-4 border-b border-line pb-4 transition-colors group-hover:border-ink">
-              <div>
-                <h2 className="text-2xl font-medium sm:text-3xl">{p.title}</h2>
-                <p className="mt-1 text-sm text-muted">{p.sub}</p>
+        {panels.map((p, i) => (
+          <Reveal key={p.title} delay={i * 120}>
+            <Link href={p.href} className="group block">
+              <div className="relative overflow-hidden">
+                <Frame
+                  src={p.src}
+                  alt=""
+                  sizes="(max-width: 640px) 100vw, 50vw"
+                  label={p.title}
+                  className="aspect-[4/3] sm:aspect-[4/5] lg:aspect-[5/4]"
+                />
+                {/* Slides up on hover; always visible on touch screens. */}
+                <span className="shop-now absolute bottom-0 left-0 bg-ink px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-white">
+                  Shop now
+                </span>
               </div>
-              <ArrowRight className="h-5 w-5 shrink-0 transition-transform group-hover:translate-x-1" />
-            </div>
-          </Link>
+              <div className="mt-4 flex items-end justify-between gap-4 border-b border-line pb-4 transition-colors group-hover:border-ink">
+                <div>
+                  <h2 className="text-2xl font-medium sm:text-3xl">{p.title}</h2>
+                  <p className="mt-1 text-sm text-muted">{p.sub}</p>
+                </div>
+                <ArrowRight className="h-5 w-5 shrink-0 transition-transform group-hover:translate-x-1" />
+              </div>
+            </Link>
+          </Reveal>
         ))}
       </div>
     </section>
@@ -105,8 +86,8 @@ function SalonTeaser({ image }) {
   const wa = whatsappLink(`Hello ${site.wordmark}, I would like to book a salon appointment.`);
   const services = site.salonServices.flatMap((g) => g.items).slice(0, 5);
   return (
-    <section className="container-x pt-20 sm:pt-24">
-      <div className="grid border border-line bg-surface md:grid-cols-2">
+    <Reveal as="section" className="container-x pt-20 sm:pt-24">
+      <div className="group grid border border-line bg-surface md:grid-cols-2">
         <Frame
           src={image}
           alt="Inside the Blue Heaven salon"
@@ -123,7 +104,7 @@ function SalonTeaser({ image }) {
           </p>
           <ul className="mt-6 divide-y divide-line border-y border-line text-sm">
             {services.map((s) => (
-              <li key={s.name} className="py-2.5">
+              <li key={s.name} className="py-2.5 transition-[padding,color] duration-200 hover:pl-2 hover:text-brand-ink">
                 {s.name}
               </li>
             ))}
@@ -140,7 +121,7 @@ function SalonTeaser({ image }) {
           </div>
         </div>
       </div>
-    </section>
+    </Reveal>
   );
 }
 
@@ -148,7 +129,7 @@ function FindUs() {
   if (!site.mapEmbed) return null;
   const tel = phoneLink();
   return (
-    <section className="container-x pt-20 sm:pt-24">
+    <Reveal as="section" className="container-x pt-20 sm:pt-24">
       <p className="eyebrow">Visit</p>
       <h2 className="mt-2 text-3xl font-medium sm:text-4xl">Find us</h2>
       <div className="mt-8 grid gap-8 md:grid-cols-[1fr_2fr] md:gap-12">
@@ -184,24 +165,24 @@ function FindUs() {
         </div>
         <ShopMap className="aspect-[4/3] md:aspect-auto md:min-h-[400px]" />
       </div>
-    </section>
+    </Reveal>
   );
 }
 
 // Shown only to visitors who are not signed in.
 function JoinStrip() {
   return (
-    <section className="container-x pt-20">
+    <Reveal as="section" className="container-x pt-20">
       <div className="flex flex-col items-start justify-between gap-5 border-y border-line py-8 sm:flex-row sm:items-center">
         <div>
           <h2 className="text-2xl font-medium">Create an account</h2>
           <p className="mt-1 text-sm text-muted">Track your orders and check out faster next time.</p>
         </div>
-        <Link href="/register" className="btn-outline">
-          Join free <ArrowRight className="h-4 w-4" />
+        <Link href="/register" className="btn-outline group">
+          Join free <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
         </Link>
       </div>
-    </section>
+    </Reveal>
   );
 }
 
@@ -240,6 +221,23 @@ export default async function Home({ searchParams }) {
     salon: site.images.salon,
   };
 
+  // One hero photo per distinct picture, so a fallback never shows twice.
+  const slides = [
+    { key: "all", label: "The collection", src: images.hero, alt: "A wig from the Blue Heaven collection" },
+    { key: "men", label: "For him", src: images.men, alt: "A men's wig from the Blue Heaven collection" },
+    { key: "women", label: "For her", src: images.women, alt: "A women's wig from the Blue Heaven collection" },
+  ].filter((slide, i, list) => slide.src && list.findIndex((s) => s.src === slide.src) === i);
+
+  // Short facts for the scrolling line under the hero, all taken from lib/site.js.
+  const facts = [
+    "Human hair and synthetic wigs",
+    "Hair patches and toppers",
+    "For men and women",
+    "Fitted and styled in our salon",
+    `Free delivery over ${formateCurrency(site.shipping.freeAt)}`,
+    ...site.hours.map((h) => `Open ${h.days.toLowerCase()}, ${h.time}`),
+  ];
+
   const heading = q
     ? `Results for “${q}”`
     : gender === "Men"
@@ -250,15 +248,16 @@ export default async function Home({ searchParams }) {
 
   return (
     <main>
-      <Hero image={images.hero} />
+      <HeroShowcase slides={slides} />
+      <Marquee items={facts} />
       <WearerPanels men={images.men} women={images.women} />
 
       {categories.length > 0 && (
-        <section className="container-x pt-20 sm:pt-24">
+        <Reveal as="section" className="container-x pt-20 sm:pt-24">
           <p className="eyebrow">Browse</p>
           <h2 className="mt-2 text-3xl font-medium sm:text-4xl">Shop by category</h2>
           <CategoryTiles categories={categories} products={all} active={category} />
-        </section>
+        </Reveal>
       )}
 
       {/* Catalog */}
@@ -302,7 +301,9 @@ export default async function Home({ searchParams }) {
         ) : (
           <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 md:grid-cols-3 xl:grid-cols-4">
             {result.items.map((product, index) => (
-              <ProductCard key={product._id} product={product} priority={index < 4} />
+              <Reveal key={product._id} delay={(index % 4) * 70}>
+                <ProductCard product={product} priority={index < 4} />
+              </Reveal>
             ))}
           </div>
         )}
@@ -313,8 +314,10 @@ export default async function Home({ searchParams }) {
       <SalonTeaser image={images.salon} />
 
       <section className="container-x pt-20 sm:pt-24">
-        <p className="eyebrow">Gallery</p>
-        <h2 className="mt-2 text-3xl font-medium sm:text-4xl">Inside Blue Heaven</h2>
+        <Reveal>
+          <p className="eyebrow">Gallery</p>
+          <h2 className="mt-2 text-3xl font-medium sm:text-4xl">Inside Blue Heaven</h2>
+        </Reveal>
         <ShopGallery photos={site.gallery} />
       </section>
 

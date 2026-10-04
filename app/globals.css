@@ -2,7 +2,8 @@
 
 /* ---------- Design tokens ----------
    "Editorial boutique": ivory paper, navy ink, one muted gold. Flat colour,
-   hairline rules and near-square corners. No gradients, glass or glow. */
+   hairline rules and near-square corners. No gradients, glass or glow;
+   the liveliness comes from motion (see the Motion section below). */
 :root {
   --bg: #f7f3ec;
   --surface: #ffffff;
@@ -117,28 +118,52 @@ h3 {
   }
 
   .btn {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm px-5 py-3 text-sm font-semibold tracking-wide transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm px-5 py-3 text-sm font-semibold tracking-wide transition duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-primary {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-ink bg-ink px-5 py-3 text-sm font-semibold tracking-wide text-white transition-colors duration-200 hover:bg-brand-ink disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-ink bg-ink px-5 py-3 text-sm font-semibold tracking-wide text-white transition duration-200 active:scale-[0.98] hover:bg-brand-ink disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-dark {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-ink bg-ink px-5 py-3 text-sm font-semibold tracking-wide text-white transition-colors duration-200 hover:bg-brand-ink disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-ink bg-ink px-5 py-3 text-sm font-semibold tracking-wide text-white transition duration-200 active:scale-[0.98] hover:bg-brand-ink disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-outline {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-ink bg-transparent px-5 py-3 text-sm font-semibold tracking-wide text-ink transition-colors duration-200 hover:bg-ink hover:text-white disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-ink bg-transparent px-5 py-3 text-sm font-semibold tracking-wide text-ink transition duration-200 active:scale-[0.98] hover:bg-ink hover:text-white disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   .btn-ghost {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm px-5 py-3 text-sm font-semibold tracking-wide text-ink underline-offset-4 transition-colors duration-200 hover:underline disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-sm px-5 py-3 text-sm font-semibold tracking-wide text-ink underline-offset-4 transition duration-200 active:scale-[0.98] hover:underline disabled:cursor-not-allowed disabled:opacity-50;
   }
 
   /* Underlined text link. */
   .link {
     @apply font-semibold text-ink underline decoration-brand-2 decoration-1 underline-offset-4 transition-colors hover:text-brand-ink;
+  }
+
+  /* Main navigation link: a gold rule draws in from the left on hover. */
+  .nav-link {
+    position: relative;
+  }
+  .nav-link::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 1px;
+    background: var(--brand-2);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .nav-link:hover::after,
+  .nav-link.is-active::after {
+    transform: scaleX(1);
+  }
+
+  /* Footer link: brightens and nudges right on hover. */
+  .footer-link {
+    @apply inline-block transition duration-200 hover:translate-x-1 hover:text-white;
   }
 
   .input {
@@ -155,8 +180,17 @@ h3 {
   }
 
   /* Add-to-cart bar on product cards: slides in on hover where hover
-     exists, and is simply always there on touch screens. */
+     exists, and is simply always there on touch screens. The "Shop now"
+     tab on the For him / For her panels works the same way. */
   @media (hover: hover) {
+    .shop-now {
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .group:hover .shop-now,
+    .group:focus-visible .shop-now {
+      transform: none;
+    }
     .quick-add {
       opacity: 0;
       transform: translateY(100%);
@@ -195,12 +229,109 @@ h3 {
   animation-delay: 0.3s;
 }
 
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease both;
+}
+
+/* Scroll reveal, switched on by components/Reveal.jsx. */
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Hero photos: cross-fade, with a slow settle on the one coming in. */
+.hero-slide {
+  opacity: 0;
+  transform: scale(1.06);
+  transition: opacity 0.8s ease, transform 5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.hero-slide.is-active {
+  opacity: 1;
+  transform: none;
+}
+
+/* The logo badge on the hero drifts gently. */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-5deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* components/Marquee.jsx: the track holds the list twice, so -50% is one loop. */
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 36s linear infinite;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+
+/* Ring that pulses out from the WhatsApp button. */
+@keyframes pulse-ring {
+  from {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.5, 1.9);
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2.4s ease-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
-  .animate-fade-up {
+  .animate-fade-up,
+  .animate-fade-in,
+  .animate-float,
+  .animate-pulse-ring,
+  .marquee-track {
     animation: none;
+  }
+  .animate-pulse-ring {
+    opacity: 0;
+  }
+  .reveal,
+  .hero-slide {
+    transform: none;
+    transition: none;
+  }
+  .reveal {
+    opacity: 1;
   }
   .quick-add {
     transition: none;

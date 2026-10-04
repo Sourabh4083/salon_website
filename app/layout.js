@@ -32,6 +32,7 @@ export const metadata = {
   openGraph: {
     siteName: site.name,
     type: "website",
+    images: [{ url: "/images/logo.png", width: 1254, height: 1254, alt: site.name }],
   },
 };
 
@@ -54,6 +55,10 @@ export default async function RootLayout({ children }) {
   return (
     <html lang="en" className={`${serif.variable} ${body.variable}`}>
       <body className="flex min-h-screen flex-col">
+        {/* Scroll-reveal content starts hidden; without JavaScript, show it. */}
+        <noscript>
+          <style>{".reveal{opacity:1;transform:none}"}</style>
+        </noscript>
         <Toaster
           position="top-center"
           toastOptions={{

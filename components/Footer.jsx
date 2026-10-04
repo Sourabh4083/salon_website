@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { site, whatsappLink, phoneLink } from "@/lib/site";
+import { LogoBadge } from "@/components/Logo";
 
 export default function Footer({ categories = [], user = null }) {
   const wa = whatsappLink(`Hello ${site.wordmark}, I have a question.`);
@@ -10,11 +11,8 @@ export default function Footer({ categories = [], user = null }) {
     <footer className="mt-24 bg-ink text-white">
       <div className="container-x grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
         <div>
-          <Link href="/" className="inline-block leading-none">
-            <span className="display block text-3xl font-medium">{site.wordmark}</span>
-            <span className="mt-1.5 block text-[10px] font-semibold uppercase tracking-[0.28em] text-brand-2">
-              {site.strapline}
-            </span>
+          <Link href="/" className="inline-block">
+            <LogoBadge className="h-auto w-28 transition-transform duration-500 hover:-rotate-3 hover:scale-105" />
           </Link>
           <p className="mt-5 max-w-xs text-sm leading-relaxed text-white/70">
             Wigs, hair patches and toppers for men and women, with fitting and styling at our salon.
@@ -24,12 +22,12 @@ export default function Footer({ categories = [], user = null }) {
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-2">Shop</p>
           <ul className="mt-4 space-y-2.5 text-sm text-white/75">
-            <li><Link href="/?gender=Men#products" className="hover:text-white">Men&apos;s wigs</Link></li>
-            <li><Link href="/?gender=Women#products" className="hover:text-white">Women&apos;s wigs</Link></li>
-            <li><Link href="/#products" className="hover:text-white">All wigs</Link></li>
+            <li><Link href="/?gender=Men#products" className="footer-link">Men&apos;s wigs</Link></li>
+            <li><Link href="/?gender=Women#products" className="footer-link">Women&apos;s wigs</Link></li>
+            <li><Link href="/#products" className="footer-link">All wigs</Link></li>
             {categories.slice(0, 4).map((c) => (
               <li key={c}>
-                <Link href={`/?category=${encodeURIComponent(c)}#products`} className="hover:text-white">
+                <Link href={`/?category=${encodeURIComponent(c)}#products`} className="footer-link">
                   {c}
                 </Link>
               </li>
@@ -40,14 +38,14 @@ export default function Footer({ categories = [], user = null }) {
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-2">Help</p>
           <ul className="mt-4 space-y-2.5 text-sm text-white/75">
-            <li><Link href="/salon" className="hover:text-white">Salon services</Link></li>
-            <li><Link href="/my-orders" className="hover:text-white">Track an order</Link></li>
-            <li><Link href="/cart" className="hover:text-white">Cart</Link></li>
+            <li><Link href="/salon" className="footer-link">Salon services</Link></li>
+            <li><Link href="/my-orders" className="footer-link">Track an order</Link></li>
+            <li><Link href="/cart" className="footer-link">Cart</Link></li>
             {/* Sign-in and sign-up links only make sense for guests. */}
             {!user && (
               <>
-                <li><Link href="/login" className="hover:text-white">Sign in</Link></li>
-                <li><Link href="/register" className="hover:text-white">Create account</Link></li>
+                <li><Link href="/login" className="footer-link">Sign in</Link></li>
+                <li><Link href="/register" className="footer-link">Create account</Link></li>
               </>
             )}
           </ul>
@@ -77,7 +75,7 @@ export default function Footer({ categories = [], user = null }) {
               ))}
               {tel && (
                 <p>
-                  <a href={tel} className="hover:text-white">{site.phone}</a>
+                  <a href={tel} className="footer-link">{site.phone}</a>
                 </p>
               )}
               {wa && (

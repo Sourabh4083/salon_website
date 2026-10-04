@@ -21,12 +21,13 @@ export default function WhatsAppFloat() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Chat with us on WhatsApp"
-      className={`fixed right-4 z-40 flex h-12 items-center gap-2 rounded-full bg-[#1f7a4d] px-4 text-sm font-semibold text-white shadow-lg transition-colors hover:bg-[#19653f] md:bottom-6 md:right-6 ${
+      className={`fixed right-4 z-40 flex h-12 items-center gap-2 rounded-full bg-[#1f7a4d] px-4 text-sm font-semibold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-[#19653f] md:bottom-6 md:right-6 ${
         onProduct ? "bottom-24" : "bottom-5"
       }`}
     >
-      <MessageCircle className="h-5 w-5" />
-      <span className="hidden sm:inline">WhatsApp</span>
+      <span className="animate-pulse-ring pointer-events-none absolute inset-0 rounded-full bg-[#1f7a4d]" aria-hidden="true" />
+      <MessageCircle className="relative h-5 w-5" />
+      <span className="relative hidden sm:inline">WhatsApp</span>
     </a>
   );
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { site } from "@/lib/site";
+import { LogoBadge } from "@/components/Logo";
 
 const BENEFITS = [
   "Track every order in one place",
@@ -14,11 +15,8 @@ export default function AuthShell({ title, subtitle, children, footer }) {
       <div className="card mx-auto grid max-w-5xl overflow-hidden lg:grid-cols-[1fr_1.1fr]">
         {/* Brand panel */}
         <div className="hidden flex-col justify-between bg-ink p-10 text-white lg:flex">
-          <Link href="/" className="leading-none">
-            <span className="display block text-3xl font-medium">{site.wordmark}</span>
-            <span className="mt-1.5 block text-[10px] font-semibold uppercase tracking-[0.28em] text-brand-2">
-              {site.strapline}
-            </span>
+          <Link href="/" className="w-fit">
+            <LogoBadge className="h-auto w-24" />
           </Link>
           <div>
             <p className="display text-4xl font-medium leading-tight">
