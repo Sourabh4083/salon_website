@@ -47,10 +47,16 @@ export default function AdminOrdersPage() {
               </header>
 
               <div className="mt-4 grid gap-6 text-sm sm:grid-cols-3">
-                <div>
+                <div className="min-w-0 break-words">
                   <p className="eyebrow">Customer</p>
                   <p className="mt-1.5 font-medium">{order.userInfo?.name}</p>
-                  <p className="text-muted">{order.userInfo?.email}</p>
+                  {order.userInfo?.phone && (
+                    <p>
+                      <a href={`tel:+91${order.userInfo.phone}`} className="link">{order.userInfo.phone}</a>
+                    </p>
+                  )}
+                  {/* Older orders were placed with an email instead of a mobile number. */}
+                  {order.userInfo?.email && <p className="text-muted">{order.userInfo.email}</p>}
                   <p className="mt-1 whitespace-pre-line text-muted">{order.userInfo?.address}</p>
                 </div>
 

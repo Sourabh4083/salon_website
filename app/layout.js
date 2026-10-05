@@ -3,6 +3,7 @@ import { Fraunces, DM_Sans } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
+import CompleteProfileBanner from "@/components/CompleteProfileBanner";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
 import { Toaster } from "react-hot-toast";
@@ -39,8 +40,10 @@ export const metadata = {
 // Strip JWT bookkeeping (iat/exp) and keep only what the UI needs.
 function publicUser(payload) {
   if (!payload) return null;
-  const { id, email, name, role } = payload;
-  return { id, email, name, role };
+  const { id, username, name, role, profileComplete } = payload;
+  // Sessions from before the flag existed read as incomplete, which is right:
+  // the extra profile fields did not exist then either.
+  return { id, username, name, role, profileComplete: Boolean(profileComplete) };
 }
 
 export default async function RootLayout({ children }) {
@@ -60,13 +63,32 @@ export default async function RootLayout({ children }) {
           <style>{".reveal{opacity:1;transform:none}"}</style>
         </noscript>
         <Toaster
-          position="top-center"
+          position="top-right"
+          gutter={10}
+          containerStyle={{ top: 16, right: 16, bottom: 16, left: 16 }}
           toastOptions={{
+            duration: 3000,
             style: {
+              maxWidth: "min(360px, calc(100vw - 32px))",
+              padding: "12px 16px",
               borderRadius: "2px",
-              background: "#14233b",
-              color: "#fff",
+              border: "1px solid #ded6c8",
+              borderLeft: "3px solid #a8843f",
+              background: "#ffffff",
+              color: "#14233b",
               fontSize: "14px",
+              fontWeight: 500,
+              lineHeight: 1.4,
+              boxShadow: "0 12px 32px -12px rgba(20, 35, 59, 0.35)",
+            },
+            success: {
+              style: { borderLeft: "3px solid #2f6b4f" },
+              iconTheme: { primary: "#2f6b4f", secondary: "#ffffff" },
+            },
+            error: {
+              duration: 5000,
+              style: { borderLeft: "3px solid #b91c1c" },
+              iconTheme: { primary: "#b91c1c", secondary: "#ffffff" },
             },
           }}
         />
@@ -75,6 +97,7 @@ export default async function RootLayout({ children }) {
           <Suspense fallback={<div className="h-[92px] border-b border-line bg-bg" />}>
             <Navbar categories={categories} />
           </Suspense>
+          <CompleteProfileBanner />
           <div className="flex-1">{children}</div>
           <Footer categories={categories} user={user} />
           <WhatsAppFloat />

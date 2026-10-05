@@ -14,7 +14,7 @@ export async function GET(req) {
     }
 
     const orders = await Order.find()
-      .populate("user", "email")
+      .populate("user", "username")
       .populate("cartItem.product", "title price")
       .sort({ createdAt: -1 })
       .lean();

@@ -29,6 +29,8 @@ const orderSchema = new mongoose.Schema({
   ],
   userInfo: {
     name: String,
+    phone: String,
+    // Only on orders placed while checkout still asked for an email.
     email: String,
     address: String,
   },

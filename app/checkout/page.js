@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import toast from "react-hot-toast";
-import { Lock, MapPin, Mail, User, ShieldCheck, Loader2 } from "lucide-react";
+import { Lock, MapPin, Phone, User, ShieldCheck, Loader2 } from "lucide-react";
+import { normaliseMobile } from "@/lib/validate";
 import { formateCurrency } from "@/utils/formatCurrency";
 import { orderTotals } from "@/lib/totals";
 import { site, gstPercent } from "@/lib/site";
@@ -15,7 +16,7 @@ export default function CheckoutPage() {
   const { cartItem, clearCart, user } = useCart();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", address: "" });
+  const [form, setForm] = useState({ name: "", phone: "", address: "" });
 
   // Prefill from the user already loaded in CartContext.
   useEffect(() => {
@@ -23,8 +24,28 @@ export default function CheckoutPage() {
     setForm((prev) => ({
       ...prev,
       name: prev.name || user.name || "",
-      email: prev.email || user.email || "",
     }));
+  }, [user]);
+
+  // Prefill the mobile number and address saved on the account, unless
+  // something is already typed.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    fetch("/api/profile")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !data?.profile) return;
+        setForm((prev) => ({
+          ...prev,
+          phone: prev.phone || data.profile.phone,
+          address: prev.address || data.profile.address,
+        }));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, [user]);
 
   const loadRazorpayScript = () =>
@@ -48,8 +69,13 @@ export default function CheckoutPage() {
   const payload = () => cartItem.map((item) => ({ _id: item._id, quantity: item.quantity }));
 
   const handleOrder = async () => {
-    if (!form.name || !form.email || !form.address) {
+    if (!form.name || !form.phone || !form.address) {
       toast.error("Please fill in all delivery details");
+      return;
+    }
+    const phone = normaliseMobile(form.phone);
+    if (!phone) {
+      toast.error("Enter a valid 10-digit mobile number");
       return;
     }
     if (cartItem.length === 0) {
@@ -77,7 +103,7 @@ export default function CheckoutPage() {
         name: site.name,
         description: "Order payment",
         order_id: razorpayData.id,
-        prefill: { name: form.name, email: form.email },
+        prefill: { name: form.name, contact: `+91${phone}` },
         theme: { color: "#14233b" },
         modal: { ondismiss: () => setSubmitting(false) },
         handler: async (response) => {
@@ -87,7 +113,7 @@ export default function CheckoutPage() {
             body: JSON.stringify({
               cartItem: payload(),
               paymentInfo: response,
-              userInfo: { name: form.name, email: form.email, address: form.address },
+              userInfo: { name: form.name, phone, address: form.address },
             }),
           });
           const saveOrderData = await saveOrderRes.json();
@@ -147,10 +173,10 @@ export default function CheckoutPage() {
                 </div>
               </div>
               <div>
-                <label htmlFor="email" className="label">Email</label>
+                <label htmlFor="phone" className="label">Mobile number</label>
                 <div className="relative">
-                  <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <input id="email" name="email" type="email" value={form.email} onChange={handleChange} required className="input pl-10" placeholder="you@example.com" />
+                  <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input id="phone" name="phone" type="tel" inputMode="numeric" autoComplete="tel-national" value={form.phone} onChange={handleChange} required maxLength={16} className="input pl-10" placeholder="98765 43210" />
                 </div>
               </div>
             </div>

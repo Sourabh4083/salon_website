@@ -4,8 +4,9 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
-import { Mail, Lock, User, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
+import { AtSign, Phone, Lock, User, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
 import AuthShell from "@/components/AuthShell";
+import { normaliseUsername, normaliseMobile, USERNAME_HINT } from "@/lib/validate";
 import { site } from "@/lib/site";
 
 function strength(pw) {
@@ -18,7 +19,7 @@ function strength(pw) {
 }
 
 function RegisterForm() {
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({ name: "", username: "", phone: "", password: "", confirmPassword: "" });
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
@@ -33,8 +34,22 @@ function RegisterForm() {
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
+  const mismatch = form.confirmPassword !== "" && form.password !== form.confirmPassword;
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!normaliseUsername(form.username)) {
+      toast.error(`Username must be ${USERNAME_HINT}`);
+      return;
+    }
+    if (!normaliseMobile(form.phone)) {
+      toast.error("Enter a valid 10-digit mobile number");
+      return;
+    }
+    if (form.password !== form.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/register", {
@@ -81,10 +96,19 @@ function RegisterForm() {
         </div>
 
         <div>
-          <label htmlFor="email" className="label">Email</label>
+          <label htmlFor="username" className="label">Username</label>
           <div className="relative">
-            <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input id="email" name="email" type="email" autoComplete="email" placeholder="you@example.com" value={form.email} onChange={handleChange} className="input pl-10" required />
+            <AtSign className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input id="username" name="username" autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder="aarav_sharma" value={form.username} onChange={handleChange} className="input pl-10" minLength={3} maxLength={20} pattern="[A-Za-z0-9_]+" title={USERNAME_HINT} required />
+          </div>
+          <p className="mt-1.5 text-xs text-muted">{USERNAME_HINT}. You sign in with this.</p>
+        </div>
+
+        <div>
+          <label htmlFor="phone" className="label">Mobile number</label>
+          <div className="relative">
+            <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input id="phone" name="phone" type="tel" inputMode="numeric" autoComplete="tel-national" placeholder="98765 43210" value={form.phone} onChange={handleChange} className="input pl-10" maxLength={16} required />
           </div>
         </div>
 
@@ -117,6 +141,32 @@ function RegisterForm() {
               </div>
               <span className="text-xs text-muted">{labels[score]}</span>
             </div>
+          )}
+        </div>
+
+        <div>
+          <label htmlFor="confirmPassword" className="label">Confirm password</label>
+          <div className="relative">
+            <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
+              type={show ? "text" : "password"}
+              autoComplete="new-password"
+              placeholder="Type your password again"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              className={`input pl-10 ${mismatch ? "border-red-700 focus:border-red-700" : ""}`}
+              minLength={6}
+              aria-invalid={mismatch}
+              aria-describedby={mismatch ? "confirmPassword-error" : undefined}
+              required
+            />
+          </div>
+          {mismatch && (
+            <p id="confirmPassword-error" className="mt-1.5 text-xs font-medium text-red-700">
+              Passwords do not match
+            </p>
           )}
         </div>
 

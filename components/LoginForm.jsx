@@ -4,12 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
-import { Mail, Lock, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
+import { AtSign, Lock, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
 import AuthShell from "@/components/AuthShell";
 import { site } from "@/lib/site";
 
 export default function LoginForm() {
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ username: "", password: "" });
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
@@ -69,16 +69,17 @@ export default function LoginForm() {
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="email" className="label">Email</label>
+          <label htmlFor="username" className="label">Username</label>
           <div className="relative">
-            <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <AtSign className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              placeholder="you@example.com"
-              value={form.email}
+              id="username"
+              name="username"
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
+              placeholder="Your username"
+              value={form.username}
               onChange={handleChange}
               className="input pl-10"
               required

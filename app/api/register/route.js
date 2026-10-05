@@ -1,17 +1,30 @@
 
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs"
-import jwt from "jsonwebtoken"
 import { dbConnect } from "@/lib/dbConnect";
+import { setSessionCookie } from "@/lib/auth";
+import { normaliseUsername, normaliseMobile, USERNAME_HINT } from "@/lib/validate";
 import User from "@/models/User";
 
 export async function POST(req) {
     try {
 
-        const { name, email, password } = await req.json()
-        
-        if (!name || !email || !password) {
+        const body = await req.json()
+        const name = String(body.name || "").trim()
+        const { password, confirmPassword } = body
+
+        if (!name || !body.username || !body.phone || !password) {
             return NextResponse.json({ error: "All fields are required" }, { status: 400 })
+        }
+
+        const username = normaliseUsername(body.username)
+        if (!username) {
+            return NextResponse.json({ error: `Username must be ${USERNAME_HINT}` }, { status: 400 })
+        }
+
+        const phone = normaliseMobile(body.phone)
+        if (!phone) {
+            return NextResponse.json({ error: "Enter a valid 10-digit mobile number" }, { status: 400 })
         }
 
         // Mirrors the schema's minlength so the user gets a clear message
@@ -23,46 +36,40 @@ export async function POST(req) {
             )
         }
 
-        await dbConnect()
-        
-        const existingUser = await User.findOne({ email })
-        if (existingUser) {
-            return NextResponse.json({ error: "User already exists" }, { status: 400})
+        if (password !== confirmPassword) {
+            return NextResponse.json({ error: "Passwords do not match" }, { status: 400 })
         }
-        
-        
+
+        await dbConnect()
+
+        const existingUser = await User.findOne({ username })
+        if (existingUser) {
+            return NextResponse.json({ error: "That username is already taken" }, { status: 400})
+        }
+
+
         const hashedPassword = await bcrypt.hash(password, 10)
-        
-        
+
+
         const newUser = await User.create({
             name,
-            email,
+            username,
+            phone,
             password: hashedPassword,
             role: "user"
         })
 
         // Sign the new user in straight away so they can continue whatever
         // they were doing (usually checkout) without a second login step.
-        const token = jwt.sign(
-            { id: newUser._id, email: newUser.email, name: newUser.name, role: newUser.role },
-            process.env.JWT_SECRET,
-            { expiresIn: "7d" }
+        return setSessionCookie(
+            NextResponse.json({ message: "User registered successfully" }),
+            newUser
         )
-
-        const response = NextResponse.json({ message: "User registered successfully" })
-        response.cookies.set("token", token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "Lax",
-            path: "/",
-            maxAge: 60 * 60 * 24 * 7,
-        })
-        return response
     } catch (error) {
-        // Two simultaneous signups with the same email race past the
+        // Two simultaneous signups with the same username race past the
         // findOne check; the unique index catches it here.
         if (error?.code === 11000) {
-            return NextResponse.json({ error: "User already exists" }, { status: 400 })
+            return NextResponse.json({ error: "That username is already taken" }, { status: 400 })
         }
         console.error("Registration error:", error)
         return NextResponse.json({ error: "Something went wrong" }, { status: 500})

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { dbConnect } from "@/lib/dbConnect";
 import { priceCart } from "@/lib/pricing";
+import { normaliseMobile } from "@/lib/validate";
 import Order from "@/models/Order";
 import Cart from "@/models/Cart";
 import Product from "@/models/Product";
@@ -57,12 +58,16 @@ export async function POST(request) {
       );
     }
 
+    // The payment is already taken at this point, so a badly typed number is
+    // stored as entered rather than failing the order.
+    const phone = normaliseMobile(userInfo?.phone) || String(userInfo?.phone || "").trim();
+
     const newOrder = await Order.create({
       user: user.id,
       cartItem: priced.items,
       userInfo: {
         name: userInfo?.name,
-        email: userInfo?.email,
+        phone,
         address: userInfo?.address,
       },
       totalAmount: priced.totalAmount,

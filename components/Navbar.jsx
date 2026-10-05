@@ -51,6 +51,9 @@ function SearchBox({ className = "", onSubmitted }) {
 function AccountLinks({ user, onNavigate, onLogout, itemClass }) {
   return (
     <>
+      <Link href="/profile" onClick={onNavigate} className={itemClass}>
+        My account
+      </Link>
       <Link href="/my-orders" onClick={onNavigate} className={itemClass}>
         My orders
       </Link>
@@ -87,7 +90,7 @@ function UserMenu({ user, onLogout }) {
     return () => document.removeEventListener("mousedown", close);
   }, []);
 
-  const firstName = (user.name || user.email || "Account").split(" ")[0];
+  const firstName = (user.name || user.username || "Account").split(" ")[0];
 
   return (
     <div ref={ref} className="relative">
@@ -106,7 +109,7 @@ function UserMenu({ user, onLogout }) {
         <div role="menu" className="card absolute right-0 z-10 mt-1 w-56 py-1 text-sm">
           <div className="border-b border-line px-4 py-3">
             <p className="truncate font-semibold">{user.name}</p>
-            <p className="truncate text-xs text-muted">{user.email}</p>
+            {user.username && <p className="truncate text-xs text-muted">@{user.username}</p>}
           </div>
           <AccountLinks
             user={user}
@@ -188,12 +191,15 @@ export default function Navbar({ categories = [] }) {
       <div className="bg-ink text-white">
         <p className="container-x py-1.5 text-center text-[11px] uppercase tracking-[0.16em]">
           Free delivery over {formateCurrency(site.shipping.freeAt)}
-          <span className="mx-2 text-brand-2">|</span>
-          Prices include {gstPercent}% GST
+          {/* One line only: the mobile menu below is pinned to this header's height. */}
+          <span className="hidden sm:inline">
+            <span className="mx-2 text-brand-2">|</span>
+            Prices include {gstPercent}% GST
+          </span>
         </p>
       </div>
 
-      <div className="container-x grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-4">
+      <div className="container-x grid h-16 grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-4">
         {/* Left: menu button on mobile, links on desktop */}
         <div className="flex items-center">
           <button
@@ -224,11 +230,11 @@ export default function Navbar({ categories = [] }) {
         <Link href="/" className="group flex items-center gap-2.5 leading-none sm:gap-3">
           <LogoMark
             priority
-            className="h-10 w-auto transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-110 sm:h-12"
+            className="h-9 w-auto shrink-0 transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-110 sm:h-12"
           />
           <span>
-            <span className="display block text-[22px] font-medium sm:text-[28px]">{site.wordmark}</span>
-            <span className="mt-1 block text-[8px] font-semibold uppercase tracking-[0.26em] text-accent sm:text-[10px] sm:tracking-[0.28em]">
+            <span className="display block whitespace-nowrap text-xl font-medium sm:text-[28px]">{site.wordmark}</span>
+            <span className="mt-1 hidden whitespace-nowrap text-[8px] font-semibold uppercase tracking-[0.26em] text-accent min-[380px]:block sm:text-[10px] sm:tracking-[0.28em]">
               {site.strapline}
             </span>
           </span>
@@ -329,7 +335,7 @@ export default function Navbar({ categories = [] }) {
                 <div className="mt-3 divide-y divide-line border-y border-line text-sm">
                   <div className="py-3">
                     <p className="truncate font-semibold">{user.name}</p>
-                    <p className="truncate text-xs text-muted">{user.email}</p>
+                    {user.username && <p className="truncate text-xs text-muted">@{user.username}</p>}
                   </div>
                   <AccountLinks
                     user={user}
