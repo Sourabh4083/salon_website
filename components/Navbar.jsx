@@ -186,7 +186,8 @@ export default function Navbar({ categories = [] }) {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-line bg-bg">
+    <header className="sticky top-0 z-50 border-b border-line">
+      <div className="glass absolute inset-0 -z-10" aria-hidden="true" />
       {/* Announcement line */}
       <div className="bg-ink text-white">
         <p className="container-x py-1.5 text-center text-[11px] uppercase tracking-[0.16em]">
@@ -212,7 +213,7 @@ export default function Navbar({ categories = [] }) {
           </button>
 
           {!isAdminArea && (
-            <nav className="hidden items-center gap-7 text-sm font-medium md:flex" aria-label="Main">
+            <nav className="hidden items-center gap-5 whitespace-nowrap text-sm font-medium md:flex lg:gap-7" aria-label="Main">
               {PRIMARY_LINKS.map((link) => (
                 <Link
                   key={link.label}

@@ -59,7 +59,7 @@ export default function HeroShowcase({ slides }) {
             Wigs, hair patches and toppers for men and women. Choose online, or visit
             the salon and we will fit and style it for you.
           </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row animate-fade-up delay-300">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:*:whitespace-nowrap animate-fade-up delay-300">
             <Link href="/?gender=Men#products" className="btn-primary group px-7" {...preview("men")}>
               Shop men&apos;s wigs
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />

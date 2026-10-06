@@ -9,7 +9,8 @@ export default function ProductGallery({ images, title, soldOut = false }) {
   const current = images[active] || images[0];
 
   return (
-    <div className="lg:sticky lg:top-40 lg:self-start">
+    // min-w-0 lets the thumbnail row scroll instead of widening the page.
+    <div className="min-w-0 lg:sticky lg:top-40 lg:self-start">
       <div className="relative aspect-[4/5] overflow-hidden bg-slate-100">
         {current ? (
           <Image

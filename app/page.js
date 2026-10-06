@@ -109,7 +109,7 @@ function SalonTeaser({ image }) {
               </li>
             ))}
           </ul>
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:*:whitespace-nowrap">
             <Link href="/salon" className="btn-primary">
               See all services
             </Link>
