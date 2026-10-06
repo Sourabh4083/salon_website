@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { site, whatsappLink, phoneLink } from "@/lib/site";
+import { site, policies, whatsappLink, phoneLink } from "@/lib/site";
 import { LogoBadge } from "@/components/Logo";
 
 export default function Footer({ categories = [], user = null }) {
@@ -91,6 +91,16 @@ export default function Footer({ categories = [], user = null }) {
       </div>
 
       <div className="border-t border-white/15">
+        <nav
+          className="container-x flex flex-wrap justify-center gap-x-6 gap-y-2 pt-6 text-xs text-white/75 sm:justify-start"
+          aria-label="Policies"
+        >
+          {policies.map((p) => (
+            <Link key={p.href} href={p.href} className="underline-offset-4 transition-colors hover:text-white hover:underline">
+              {p.label}
+            </Link>
+          ))}
+        </nav>
         <div className="container-x flex flex-col items-center justify-between gap-2 py-6 text-xs text-white/60 sm:flex-row">
           <p>
             © {new Date().getFullYear()} {site.name}
