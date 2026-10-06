@@ -57,7 +57,7 @@ export default function SalonPage() {
               fitting, or simply a good haircut. Men and women are both welcome.
             </p>
             {(wa || tel) && (
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row animate-fade-up delay-300">
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:*:whitespace-nowrap animate-fade-up delay-300">
                 {wa && (
                   <a href={wa} target="_blank" rel="noopener noreferrer" className="btn-primary px-7">
                     Book on WhatsApp

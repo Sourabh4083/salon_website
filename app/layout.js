@@ -3,6 +3,7 @@ import { Fraunces, DM_Sans } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import WhatsAppFloat from "@/components/WhatsAppFloat";
+import Ambience from "@/components/Ambience";
 import CompleteProfileBanner from "@/components/CompleteProfileBanner";
 import "./globals.css";
 import { CartProvider } from "@/context/CartContext";
@@ -62,6 +63,7 @@ export default async function RootLayout({ children }) {
         <noscript>
           <style>{".reveal{opacity:1;transform:none}"}</style>
         </noscript>
+        <Ambience />
         <Toaster
           position="top-right"
           gutter={10}

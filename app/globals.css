@@ -1,9 +1,10 @@
 @import "tailwindcss";
 
 /* ---------- Design tokens ----------
-   "Editorial boutique": ivory paper, navy ink, one muted gold. Flat colour,
-   hairline rules and near-square corners. No gradients, glass or glow;
-   the liveliness comes from motion (see the Motion section below). */
+   "Editorial boutique": ivory paper, navy ink, one muted gold. Hairline
+   rules and near-square corners. Content stays flat and quiet; the depth
+   comes from the living background behind it (see the Ambience section)
+   and from motion (see the Motion section). */
 :root {
   --bg: #f7f3ec;
   --surface: #ffffff;
@@ -108,6 +109,16 @@ h3 {
 
   .card {
     @apply rounded-sm border border-line bg-surface;
+    /* A soft lift, so panels sit above the background instead of on it. */
+    box-shadow: 0 24px 48px -36px rgba(20, 35, 59, 0.28);
+  }
+
+  /* Frosted backing for the sticky header. It is a separate layer because a
+     backdrop filter on the header itself would trap the fixed mobile menu. */
+  .glass {
+    background: rgba(247, 243, 236, 0.78);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    backdrop-filter: blur(16px) saturate(1.4);
   }
 
   .card-hover {
@@ -202,6 +213,97 @@ h3 {
       transform: none;
     }
   }
+}
+
+/* ---------- Ambience ----------
+   The page background, drawn by components/Ambience.jsx. Everything here is
+   fixed behind the content and never takes a click. */
+.ambience {
+  position: fixed;
+  inset: 0 0 auto 0;
+  /* The tallest the viewport gets, so no gap opens when a phone's address
+     bar slides away. */
+  height: 100vh;
+  height: 100lvh;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(180deg, #fcfaf5 0%, var(--bg) 45%, #f0e8da 100%);
+}
+
+/* Large pools of champagne, navy and pearl light that drift very slowly. */
+.ambience-glow {
+  position: absolute;
+  border-radius: 50%;
+  will-change: transform;
+}
+.ambience-glow-1 {
+  top: -28vmax;
+  right: -22vmax;
+  width: 78vmax;
+  height: 78vmax;
+  background: radial-gradient(closest-side, rgba(214, 178, 110, 0.36), rgba(214, 178, 110, 0));
+  animation: drift-1 28s ease-in-out infinite alternate;
+}
+.ambience-glow-2 {
+  bottom: -32vmax;
+  left: -26vmax;
+  width: 82vmax;
+  height: 82vmax;
+  background: radial-gradient(closest-side, rgba(31, 58, 99, 0.15), rgba(31, 58, 99, 0));
+  animation: drift-2 34s ease-in-out infinite alternate;
+}
+.ambience-glow-3 {
+  top: 30%;
+  left: 22%;
+  width: 52vmax;
+  height: 52vmax;
+  background: radial-gradient(closest-side, rgba(236, 211, 168, 0.3), rgba(236, 211, 168, 0));
+  animation: drift-3 40s ease-in-out infinite alternate;
+}
+
+@keyframes drift-1 {
+  to {
+    transform: translate3d(-9vmax, 7vmax, 0) scale(1.12);
+  }
+}
+@keyframes drift-2 {
+  to {
+    transform: translate3d(11vmax, -8vmax, 0) scale(1.08);
+  }
+}
+@keyframes drift-3 {
+  to {
+    transform: translate3d(-12vmax, -9vmax, 0) scale(0.9);
+  }
+}
+
+/* Pool of warm light that follows the pointer. */
+.ambience-spot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: clamp(22rem, 52vmax, 46rem);
+  height: clamp(22rem, 52vmax, 46rem);
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    rgba(255, 250, 238, 0.95),
+    rgba(226, 192, 128, 0.2) 48%,
+    rgba(226, 192, 128, 0)
+  );
+  /* Parked top right until the script places it. */
+  transform: translate3d(70vw, 30vh, 0) translate(-50%, -50%);
+  will-change: transform;
+}
+
+/* Paper grain, so the gradients never look like plain screen colour. */
+.ambience-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.07;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 /* ---------- Motion ---------- */
@@ -319,7 +421,8 @@ h3 {
   .animate-fade-in,
   .animate-float,
   .animate-pulse-ring,
-  .marquee-track {
+  .marquee-track,
+  .ambience-glow {
     animation: none;
   }
   .animate-pulse-ring {
