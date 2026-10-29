@@ -11,6 +11,7 @@ import { Toaster } from "react-hot-toast";
 import { getCurrentUser } from "@/lib/auth";
 import { getCategories } from "@/lib/products";
 import { site } from "@/lib/site";
+import { Analytics } from "@vercel/analytics/next";
 
 const serif = Fraunces({
   subsets: ["latin"],
@@ -104,6 +105,7 @@ export default async function RootLayout({ children }) {
           <Footer categories={categories} user={user} />
           <WhatsAppFloat />
         </CartProvider>
+        <Analytics />
       </body>
     </html>
   );
