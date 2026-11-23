@@ -11,8 +11,10 @@ export default async function AdminDashboard() {
     }
 
     const links = [
-        { href: "/admin/manage-products", title: "Products", text: "Add wigs, edit details, photos and stock." },
+        { href: "/admin/manage-products", title: "Products", text: "Add products, edit details, photos and stock." },
+        { href: "/admin/categories", title: "Categories", text: "Add, rename or delete shop categories." },
         { href: "/admin/orders", title: "Orders", text: "See what customers have ordered and paid." },
+        { href: "/admin/customers", title: "Customers", text: "Find customers and reset forgotten passwords." },
     ]
 
     return (

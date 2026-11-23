@@ -31,11 +31,11 @@ export default function ProductCard({ product }) {
         }
     };
 
-    const attributes = [product.gender, product.hairType, product.category].filter(Boolean).join(" · ");
+    const attributes = [product.brand, product.size, product.category].filter(Boolean).join(" · ");
 
     return (
         <div className="card flex gap-4 p-4">
-            <div className="relative aspect-[4/5] w-24 shrink-0 overflow-hidden bg-slate-100">
+            <div className="relative aspect-square w-24 shrink-0 overflow-hidden bg-slate-100">
                 {product.image ? (
                     <Image src={product.image} alt={product.title} fill sizes="96px" className="object-cover" />
                 ) : (

@@ -6,9 +6,9 @@ import { usePathname } from "next/navigation";
 import { ArrowRight, X } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 
-const HIDDEN_ON = ["/profile", "/admin", "/login", "/register"];
+const HIDDEN_ON = ["/profile", "/admin", "/login", "/register", "/change-password"];
 
-// Sign-up only asks for name, username, mobile and password, so this nudges signed-in
+// Sign-up only asks for name, mobile and password, so this nudges signed-in
 // customers to fill in the rest. Closing it lasts for the browser session.
 export default function CompleteProfileBanner() {
   const { user } = useCart();

@@ -15,17 +15,15 @@ export default function Footer({ categories = [], user = null }) {
             <LogoBadge className="h-auto w-28 transition-transform duration-500 hover:-rotate-3 hover:scale-105" />
           </Link>
           <p className="mt-5 max-w-xs text-sm leading-relaxed text-white/70">
-            Wigs, hair patches and toppers for men and women, with fitting and styling at our salon.
+            Wig shampoo, adhesives, caps and care products, with fitting and styling at our salon.
           </p>
         </div>
 
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-brand-2">Shop</p>
           <ul className="mt-4 space-y-2.5 text-sm text-white/75">
-            <li><Link href="/?gender=Men#products" className="footer-link">Men&apos;s wigs</Link></li>
-            <li><Link href="/?gender=Women#products" className="footer-link">Women&apos;s wigs</Link></li>
-            <li><Link href="/#products" className="footer-link">All wigs</Link></li>
-            {categories.slice(0, 4).map((c) => (
+            <li><Link href="/#products" className="footer-link">All products</Link></li>
+            {categories.slice(0, 6).map((c) => (
               <li key={c}>
                 <Link href={`/?category=${encodeURIComponent(c)}#products`} className="footer-link">
                   {c}

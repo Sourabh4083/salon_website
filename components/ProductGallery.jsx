@@ -11,7 +11,7 @@ export default function ProductGallery({ images, title, soldOut = false }) {
   return (
     // min-w-0 lets the thumbnail row scroll instead of widening the page.
     <div className="min-w-0 lg:sticky lg:top-40 lg:self-start">
-      <div className="relative aspect-[4/5] overflow-hidden bg-slate-100">
+      <div className="relative aspect-square overflow-hidden bg-slate-100">
         {current ? (
           <Image
             key={current}
@@ -33,7 +33,7 @@ export default function ProductGallery({ images, title, soldOut = false }) {
               onClick={() => setActive(i)}
               aria-label={`Show photo ${i + 1} of ${images.length}`}
               aria-current={i === active}
-              className={`relative aspect-[4/5] w-20 shrink-0 overflow-hidden border bg-slate-100 transition-colors ${
+              className={`relative aspect-square w-20 shrink-0 overflow-hidden border bg-slate-100 transition-colors ${
                 i === active ? "border-ink" : "border-transparent hover:border-line"
               }`}
             >

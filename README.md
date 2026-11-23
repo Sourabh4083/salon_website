@@ -1,6 +1,6 @@
 # Blue Heaven Wighub & Unisex Salon
 
-Online store for wigs, hair patches and toppers for men and women, plus a page for the unisex salon.
+Online store for wig care products and accessories (shampoo and conditioner, adhesives and tapes, caps, stands and tools, styling products), plus a page for the unisex salon.
 
 Built with Next.js 15 (App Router), MongoDB (Mongoose), Cloudinary (photo uploads), Razorpay (payments) and Tailwind CSS v4. It started from the `my-ecommerce` store template.
 
@@ -9,7 +9,8 @@ Built with Next.js 15 (App Router), MongoDB (Mongoose), Cloudinary (photo upload
 | To change | Edit |
 |---|---|
 | Business name, phone, WhatsApp, address, hours, GSTIN, delivery fee, salon services, hero photos | `lib/site.js` |
-| Wig option lists (who it is for, hair type, base type, length) | `lib/wig.js` |
+| Shop categories (add, rename, delete) | **Admin › Categories** on the site |
+| "Suitable for" options, starter categories, product field rules | `lib/catalog.js` |
 | Colours, fonts, button and card styles | `app/globals.css` |
 
 Anything left empty in `lib/site.js` is hidden on the site. For example, WhatsApp buttons only appear once `whatsapp` is filled in.
@@ -51,7 +52,7 @@ CLOUDINARY_API_SECRET
 1. Register an account on the site.
 2. In MongoDB, open the `users` collection and set that account's `role` to `admin`.
 3. Sign out and back in. "Manage products" now appears in the account menu.
-4. Add wigs with photos. Portrait photos (4:5) look best.
+4. Check the categories under Admin › Categories, then add products with photos. Square photos look best.
 
 ## Deploying to Vercel
 

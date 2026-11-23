@@ -11,7 +11,7 @@ import { site, gstPercent, whatsappLink } from "@/lib/site";
 export async function generateMetadata({ params }) {
   const { id } = await params;
   const product = await getProductById(id);
-  if (!product) return { title: "Wig not found" };
+  if (!product) return { title: "Product not found" };
   return {
     title: product.title,
     description: product.description || `${product.title} from ${site.shortName}.`,
@@ -29,10 +29,9 @@ export default async function ProductDetail({ params }) {
   const off = hasMrp ? Math.round(((product.mrp - product.price) / product.mrp) * 100) : 0;
 
   const specs = [
-    ["For", product.gender],
-    ["Hair type", product.hairType],
-    ["Base", product.baseType],
-    ["Length", product.length],
+    ["Brand", product.brand],
+    ["Size", product.size],
+    ["Suitable for", product.suitableFor === "Both" ? "Human hair and synthetic wigs" : product.suitableFor && `${product.suitableFor} wigs`],
     ["Colour", product.color],
     ["Category", product.category],
   ].filter(([, value]) => value);
@@ -54,10 +53,10 @@ export default async function ProductDetail({ params }) {
       <nav className="flex items-center gap-1.5 text-xs text-muted" aria-label="Breadcrumb">
         <Link href="/" className="hover:text-ink">Home</Link>
         <ChevronRight className="h-3.5 w-3.5" />
-        {product.gender && product.gender !== "Unisex" ? (
+        {product.category ? (
           <>
-            <Link href={`/?gender=${product.gender}#products`} className="hover:text-ink">
-              {product.gender}
+            <Link href={`/?category=${encodeURIComponent(product.category)}#products`} className="hover:text-ink">
+              {product.category}
             </Link>
             <ChevronRight className="h-3.5 w-3.5" />
           </>
@@ -71,7 +70,7 @@ export default async function ProductDetail({ params }) {
         {/* Info */}
         <div>
           <p className="eyebrow">
-            {[product.gender, product.hairType].filter(Boolean).join(" · ") || "Wig"}
+            {[product.brand, product.category].filter(Boolean).join(" · ") || "Wig care"}
           </p>
           <h1 className="mt-3 text-3xl font-medium leading-tight sm:text-5xl">{product.title}</h1>
 
@@ -105,7 +104,7 @@ export default async function ProductDetail({ params }) {
                 {specs.map(([label, value]) => (
                   <div key={label} className="flex justify-between gap-6 py-3">
                     <dt className="text-muted">{label}</dt>
-                    <dd className="text-right font-medium capitalize">{value}</dd>
+                    <dd className="text-right font-medium">{value}</dd>
                   </div>
                 ))}
               </dl>

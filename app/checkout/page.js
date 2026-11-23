@@ -6,47 +6,66 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import toast from "react-hot-toast";
-import { Lock, MapPin, Phone, User, ShieldCheck, Loader2 } from "lucide-react";
-import { normaliseMobile } from "@/lib/validate";
+import { Lock, ShieldCheck, Loader2, Plus } from "lucide-react";
+import AddressForm from "@/components/AddressForm";
+import { AddressText, sendAddress } from "@/components/AddressBook";
+import { MAX_ADDRESSES } from "@/lib/address";
 import { formateCurrency } from "@/utils/formatCurrency";
 import { orderTotals } from "@/lib/totals";
-import { site, gstPercent } from "@/lib/site";
+import { site, gstPercent, whatsappLink } from "@/lib/site";
 
 export default function CheckoutPage() {
   const { cartItem, clearCart, user } = useCart();
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({ name: "", phone: "", address: "" });
+  // Set when payment succeeded but confirming the order didn't.
+  const [failedPayment, setFailedPayment] = useState(null);
 
-  // Prefill from the user already loaded in CartContext.
-  useEffect(() => {
-    if (!user) return;
-    setForm((prev) => ({
-      ...prev,
-      name: prev.name || user.name || "",
-    }));
-  }, [user]);
+  // Saved addresses (null while loading), which one is chosen, and an
+  // address used for this order only (not saved to the account).
+  const [addresses, setAddresses] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
+  const [oneOff, setOneOff] = useState(null);
+  const [adding, setAdding] = useState(false);
+  const [saveNew, setSaveNew] = useState(true);
 
-  // Prefill the mobile number and address saved on the account, unless
-  // something is already typed.
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    fetch("/api/profile")
-      .then((res) => (res.ok ? res.json() : null))
+    fetch("/api/addresses")
+      .then((res) => (res.ok ? res.json() : { addresses: [] }))
+      .catch(() => ({ addresses: [] }))
       .then((data) => {
-        if (cancelled || !data?.profile) return;
-        setForm((prev) => ({
-          ...prev,
-          phone: prev.phone || data.profile.phone,
-          address: prev.address || data.profile.address,
-        }));
-      })
-      .catch(() => {});
+        if (cancelled) return;
+        const list = data.addresses || [];
+        setAddresses(list);
+        // The default address comes first.
+        setSelectedId((current) => current || list[0]?.id || null);
+        if (list.length === 0) setAdding(true);
+      });
     return () => {
       cancelled = true;
     };
   }, [user]);
+
+  const selected =
+    selectedId === "one-off" ? oneOff : addresses?.find((a) => a.id === selectedId) || null;
+  const canSave = (addresses?.length || 0) < MAX_ADDRESSES;
+  const hasChoices = (addresses?.length || 0) > 0 || Boolean(oneOff);
+
+  const chooseNewAddress = async (address) => {
+    if (saveNew && canSave) {
+      const data = await sendAddress("/api/addresses", "POST", address);
+      if (data.error) return data;
+      setAddresses(data.addresses);
+      setSelectedId(data.id);
+      toast.success("Address saved to your account");
+    } else {
+      setOneOff(address);
+      setSelectedId("one-off");
+    }
+    setAdding(false);
+  };
 
   const loadRazorpayScript = () =>
     new Promise((resolve) => {
@@ -58,8 +77,6 @@ export default function CheckoutPage() {
       document.body.appendChild(script);
     });
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-
   // Display only. The amount actually charged is recomputed on the server
   // with the same function (lib/pricing.js).
   const { subtotal: subTotal, shipping, total, taxable, gst } = orderTotals(
@@ -68,14 +85,33 @@ export default function CheckoutPage() {
 
   const payload = () => cartItem.map((item) => ({ _id: item._id, quantity: item.quantity }));
 
-  const handleOrder = async () => {
-    if (!form.name || !form.phone || !form.address) {
-      toast.error("Please fill in all delivery details");
-      return;
+  // Runs once Razorpay says the payment went through. The money has been
+  // taken by now, so a failure here must never be silent: the customer gets
+  // a lasting panel with the payment id, a retry, and a way to reach the shop.
+  // Retrying is safe because the server confirms each payment only once.
+  const confirmOrder = async (paymentInfo) => {
+    setSubmitting(true);
+    setFailedPayment(null);
+    try {
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentInfo }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "We couldn't confirm your order");
+
+      clearCart();
+      router.push(`/order-success?id=${data.orderId}`);
+    } catch (err) {
+      setFailedPayment({ paymentInfo, message: err.message || "We couldn't confirm your order" });
+      setSubmitting(false);
     }
-    const phone = normaliseMobile(form.phone);
-    if (!phone) {
-      toast.error("Enter a valid 10-digit mobile number");
+  };
+
+  const handleOrder = async () => {
+    if (!selected) {
+      toast.error("Please choose a delivery address");
       return;
     }
     if (cartItem.length === 0) {
@@ -88,44 +124,30 @@ export default function CheckoutPage() {
       const ok = await loadRazorpayScript();
       if (!ok) throw new Error("Could not load the payment gateway");
 
+      // The delivery details go with the cart: the order is saved (unpaid)
+      // before payment, so what is paid for can't change afterwards.
       const razorpayRes = await fetch("/api/razorpay/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cartItem: payload() }),
+        body: JSON.stringify({
+          cartItem: payload(),
+          address: selected,
+        }),
       });
-      const razorpayData = await razorpayRes.json();
+      const razorpayData = await razorpayRes.json().catch(() => ({}));
       if (!razorpayRes.ok) throw new Error(razorpayData.error || "Failed to start payment");
 
       const rzp = new window.Razorpay({
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        key: razorpayData.keyId || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: razorpayData.amount,
         currency: "INR",
         name: site.name,
         description: "Order payment",
         order_id: razorpayData.id,
-        prefill: { name: form.name, contact: `+91${phone}` },
+        prefill: { name: selected.name, contact: `+91${selected.phone}` },
         theme: { color: "#14233b" },
         modal: { ondismiss: () => setSubmitting(false) },
-        handler: async (response) => {
-          const saveOrderRes = await fetch("/api/checkout", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              cartItem: payload(),
-              paymentInfo: response,
-              userInfo: { name: form.name, phone, address: form.address },
-            }),
-          });
-          const saveOrderData = await saveOrderRes.json();
-          if (!saveOrderRes.ok) {
-            toast.error("Order failed to save: " + (saveOrderData.error || "unknown error"));
-            setSubmitting(false);
-            return;
-          }
-          await fetch("/api/cart", { method: "DELETE" });
-          clearCart();
-          router.push(`/order-success?id=${saveOrderData.orderId}`);
-        },
+        handler: (response) => confirmOrder(response),
       });
       rzp.open();
     } catch (err) {
@@ -139,7 +161,7 @@ export default function CheckoutPage() {
       <main className="container-x py-20 text-center">
         <h1 className="text-2xl font-medium">Nothing to check out</h1>
         <p className="mt-2 text-sm text-muted">Your cart is empty.</p>
-        <Link href="/#products" className="btn-primary mt-6">Browse wigs</Link>
+        <Link href="/#products" className="btn-primary mt-6">Browse products</Link>
       </main>
     );
   }
@@ -151,65 +173,130 @@ export default function CheckoutPage() {
         <span className="pill border border-line text-muted"><Lock className="h-3 w-3" /> Secure</span>
       </div>
 
+      {failedPayment && (
+        <div role="alert" className="mt-6 rounded-xl border border-red-300 bg-red-50 p-5 text-sm text-red-800">
+          <p className="font-semibold">Your payment went through, but we couldn&apos;t confirm your order.</p>
+          <p className="mt-1">
+            {failedPayment.message}. Please don&apos;t pay again. Try confirming once more, or contact us with
+            your payment ID and we&apos;ll sort it out.
+          </p>
+          <p className="mt-2">
+            Payment ID:{" "}
+            <span className="select-all font-mono font-semibold">{failedPayment.paymentInfo?.razorpay_payment_id}</span>
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => confirmOrder(failedPayment.paymentInfo)}
+              disabled={submitting}
+              className="btn-primary"
+            >
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Try again
+            </button>
+            {whatsappLink() && (
+              <a
+                href={whatsappLink(`Hi, I paid for an order but it wasn't confirmed. Payment ID: ${failedPayment.paymentInfo?.razorpay_payment_id}`)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-outline"
+              >
+                Contact us on WhatsApp
+              </a>
+            )}
+            {site.phone && <span className="self-center">or call {site.phone}</span>}
+          </div>
+        </div>
+      )}
+
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_400px]">
-        {/* Delivery form */}
+        {/* Delivery address */}
         <section className="card p-6 sm:p-8">
-          <h2 className="text-lg font-medium">Delivery details</h2>
+          <h2 className="text-lg font-medium">Delivery address</h2>
           <p className="mt-1 text-sm text-muted">Where should we send your order?</p>
 
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleOrder();
-            }}
-            className="mt-6 space-y-5"
-          >
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div>
-                <label htmlFor="name" className="label">Full name</label>
-                <div className="relative">
-                  <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <input id="name" name="name" value={form.name} onChange={handleChange} required className="input pl-10" placeholder="Aarav Sharma" />
-                </div>
-              </div>
-              <div>
-                <label htmlFor="phone" className="label">Mobile number</label>
-                <div className="relative">
-                  <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                  <input id="phone" name="phone" type="tel" inputMode="numeric" autoComplete="tel-national" value={form.phone} onChange={handleChange} required maxLength={16} className="input pl-10" placeholder="98765 43210" />
-                </div>
-              </div>
+          {addresses === null ? (
+            <div className="mt-6 space-y-3" aria-busy="true">
+              <div className="h-24 animate-pulse bg-slate-100" />
+              <div className="h-24 animate-pulse bg-slate-100" />
             </div>
+          ) : (
+            <div className="mt-6 space-y-3">
+              {hasChoices && (
+                <fieldset className="space-y-3">
+                  <legend className="sr-only">Choose a delivery address</legend>
+                  {[...addresses, ...(oneOff ? [{ ...oneOff, id: "one-off" }] : [])].map((a) => (
+                    <label
+                      key={a.id}
+                      className={`flex cursor-pointer gap-3 border p-4 transition-colors ${selectedId === a.id ? "border-ink bg-surface" : "border-line hover:border-slate-400"}`}
+                    >
+                      <input
+                        type="radio"
+                        name="address"
+                        value={a.id}
+                        checked={selectedId === a.id}
+                        onChange={() => setSelectedId(a.id)}
+                        className="mt-1 h-4 w-4 shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <AddressText address={a} />
+                        {a.id === "one-off" && <p className="mt-1 text-xs text-muted">For this order only (not saved)</p>}
+                      </div>
+                    </label>
+                  ))}
+                </fieldset>
+              )}
 
-            <div>
-              <label htmlFor="address" className="label">Delivery address</label>
-              <div className="relative">
-                <MapPin className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
-                <textarea
-                  id="address"
-                  name="address"
-                  rows={4}
-                  value={form.address}
-                  onChange={handleChange}
-                  required
-                  className="input resize-none pl-10"
-                  placeholder="House / flat, street, city, state, PIN code"
-                />
-              </div>
+              {adding ? (
+                <div className={hasChoices ? "border border-ink p-4 sm:p-5" : ""}>
+                  {hasChoices && <p className="mb-4 font-medium">New address</p>}
+                  <AddressForm
+                    initial={{ name: user?.name || "", phone: user?.phone || "" }}
+                    onSubmit={chooseNewAddress}
+                    onCancel={hasChoices ? () => setAdding(false) : undefined}
+                    submitLabel="Deliver here"
+                  >
+                    {canSave ? (
+                      <label className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" checked={saveNew} onChange={(e) => setSaveNew(e.target.checked)} className="h-4 w-4" />
+                        Save this address to my account
+                      </label>
+                    ) : (
+                      <p className="text-xs text-muted">You have {MAX_ADDRESSES} saved addresses, so this one is used for this order only.</p>
+                    )}
+                  </AddressForm>
+                </div>
+              ) : (
+                <button type="button" onClick={() => setAdding(true)} className="btn-outline w-full">
+                  <Plus className="h-4 w-4" /> Deliver to a new address
+                </button>
+              )}
             </div>
+          )}
 
-            <button type="submit" disabled={submitting} className="btn-primary w-full py-4 text-base">
+          <div className="mt-6 space-y-3 border-t border-line pt-6">
+            <button
+              type="button"
+              onClick={handleOrder}
+              disabled={submitting || !selected || adding}
+              className="btn-primary w-full py-4 text-base"
+            >
               {submitting ? (
                 <><Loader2 className="h-5 w-5 animate-spin" /> Opening secure payment…</>
               ) : (
                 <><Lock className="h-4 w-4" /> Pay {formateCurrency(total)}</>
               )}
             </button>
+            {adding && hasChoices && (
+              <p className="text-center text-xs text-muted">Finish or cancel the new address to continue.</p>
+            )}
+            {adding && !hasChoices && (
+              <p className="text-center text-xs text-muted">Add your delivery address above to continue.</p>
+            )}
 
             <p className="flex items-center justify-center gap-1.5 text-xs text-muted">
               <ShieldCheck className="h-3.5 w-3.5" /> Payments are processed by Razorpay. We never see your card details.
             </p>
-          </form>
+          </div>
         </section>
 
         {/* Summary */}

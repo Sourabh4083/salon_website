@@ -3,6 +3,8 @@ import { getCurrentUser } from "@/lib/auth";
 import { dbConnect } from "@/lib/dbConnect";
 import User from "@/models/User";
 import ProfileForm from "@/components/ProfileForm";
+import AddressBook from "@/components/AddressBook";
+import { publicAddresses } from "@/lib/address";
 
 export const metadata = { title: "My account" };
 
@@ -13,16 +15,25 @@ export default async function ProfilePage() {
   if (!session) redirect("/login?redirect=/profile");
 
   await dbConnect();
-  const user = await User.findById(session.id).select("name username phone address gender dateOfBirth").lean();
+  const user = await User.findById(session.id)
+    .select("name phone address addresses gender dateOfBirth createdAt")
+    .lean();
   if (!user) redirect("/login?redirect=/profile");
 
   const profile = {
     name: user.name || "",
-    username: user.username || "",
     phone: user.phone || "",
-    address: user.address || "",
     gender: user.gender || "",
     dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().slice(0, 10) : "",
+  };
+
+  const addresses = publicAddresses(user);
+
+  // Shown in the summary card only; not editable here.
+  const account = {
+    memberSince: user.createdAt
+      ? new Date(user.createdAt).toLocaleDateString("en-IN", { month: "long", year: "numeric" })
+      : "",
   };
 
   return (
@@ -30,11 +41,14 @@ export default async function ProfilePage() {
       <div className="mx-auto max-w-2xl">
         <p className="eyebrow">Account</p>
         <h1 className="mt-2 text-3xl font-medium">My account</h1>
-        <p className="mt-1 text-sm text-muted">
-          Keep your details up to date so we can deliver your orders without a hitch.
-        </p>
 
-        <ProfileForm initialProfile={profile} />
+        <ProfileForm initialProfile={profile} account={account} hasAddress={addresses.length > 0}>
+          <AddressBook
+            initialAddresses={addresses}
+            legacyAddress={addresses.length ? "" : user.address || ""}
+            defaults={{ name: profile.name, phone: profile.phone }}
+          />
+        </ProfileForm>
       </div>
     </main>
   );

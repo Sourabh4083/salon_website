@@ -11,13 +11,13 @@ export default function ProductCard({ product, priority = false }) {
   const lowStock = product.stock > 0 && product.stock <= 5;
   const soldOut = product.stock <= 0;
   const hasMrp = product.mrp > product.price;
-  // For example "Women · Human hair"
-  const attributes = [product.gender, product.hairType].filter(Boolean).join(" · ");
+  // For example "Walker Tape · 1 roll"
+  const attributes = [product.brand, product.size].filter(Boolean).join(" · ");
 
   return (
     <article className="group flex flex-col">
-      {/* Portrait frame: wigs read better tall than square. */}
-      <div className="relative aspect-[4/5] overflow-hidden bg-slate-100">
+      {/* Square frame: bottles, tubes and packs sit well in it. */}
+      <div className="relative aspect-square overflow-hidden bg-slate-100">
         <Link href={`/product/${product._id}`} prefetch className="absolute inset-0" tabIndex={-1} aria-hidden="true">
           {product.image ? (
             <Image

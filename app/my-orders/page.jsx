@@ -5,6 +5,8 @@ import { dbConnect } from "@/lib/dbConnect";
 import Order from "@/models/Order";
 import { formateCurrency } from "@/utils/formatCurrency";
 import { site, gstPercent } from "@/lib/site";
+import AutoRefresh from "@/components/AutoRefresh";
+import { addressLines } from "@/lib/address";
 
 export const metadata = { title: "My orders" };
 
@@ -47,6 +49,51 @@ function StatusTimeline({ status }) {
   );
 }
 
+const DATE = { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Kolkata" };
+
+function StatusDates({ order }) {
+  const rows = [
+    ["Shipped on", order.shippedAt],
+    ["Delivered on", order.deliveredAt],
+    ["Cancelled on", order.deliveryStatus === "cancelled" ? order.cancelledAt : null],
+  ].filter(([, date]) => date);
+  if (rows.length === 0) return null;
+  return (
+    <dl className="mt-4 space-y-1 text-xs">
+      {rows.map(([label, date]) => (
+        <div key={label} className="flex justify-between gap-3">
+          <dt className="text-muted">{label}</dt>
+          <dd className="font-medium">{new Date(date).toLocaleDateString("en-IN", DATE)}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+// Courier details entered by the shop when the parcel is handed over.
+function Tracking({ order }) {
+  if (order.deliveryStatus === "cancelled") return null;
+  if (!order.courier && !order.trackingNumber && !order.trackingUrl) return null;
+  return (
+    <div className="mt-4 rounded-lg border border-line bg-white p-3 text-xs">
+      {order.courier && (
+        <p><span className="text-muted">Courier: </span><span className="font-medium">{order.courier}</span></p>
+      )}
+      {order.trackingNumber && (
+        <p className="mt-0.5">
+          <span className="text-muted">Tracking no: </span>
+          <span className="select-all font-mono font-semibold">{order.trackingNumber}</span>
+        </p>
+      )}
+      {order.trackingUrl && (
+        <a href={order.trackingUrl} target="_blank" rel="noopener noreferrer" className="btn-primary mt-3 w-full py-2 text-xs">
+          <Truck className="h-3.5 w-3.5" /> Track package
+        </a>
+      )}
+    </div>
+  );
+}
+
 export default async function MyOrdersPage() {
   await dbConnect();
   const user = await getCurrentUser();
@@ -60,7 +107,7 @@ export default async function MyOrdersPage() {
     );
   }
 
-  const orders = await Order.find({ user: user.id }).sort({ createdAt: -1 }).lean();
+  const orders = await Order.find({ user: user.id, paymentStatus: "paid" }).sort({ createdAt: -1 }).lean();
 
   if (orders.length === 0) {
     return (
@@ -79,6 +126,8 @@ export default async function MyOrdersPage() {
 
   return (
     <main className="container-x py-8 sm:py-12">
+      {/* Picks up status changes made by the shop without a page reload. */}
+      <AutoRefresh />
       <h1 className="text-3xl font-medium">My orders</h1>
       <p className="mt-1 text-sm text-muted">{orders.length} {orders.length === 1 ? "order" : "orders"}</p>
 
@@ -138,11 +187,18 @@ export default async function MyOrdersPage() {
                 <div className="rounded-xl bg-slate-50 p-4">
                   <p className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted">Delivery status</p>
                   <StatusTimeline status={order.deliveryStatus || "pending"} />
-                  {order.userInfo?.address && (
-                    <p className="mt-4 text-xs text-muted">
+                  <StatusDates order={order} />
+                  <Tracking order={order} />
+                  {order.shippingAddress ? (
+                    <div className="mt-4 text-xs text-muted">
+                      <p className="font-semibold text-slate-700">Ship to: {order.shippingAddress.name}</p>
+                      {addressLines(order.shippingAddress).map((line) => <p key={line}>{line}</p>)}
+                    </div>
+                  ) : order.userInfo?.address ? (
+                    <p className="mt-4 whitespace-pre-line text-xs text-muted">
                       <span className="font-semibold text-slate-700">Ship to:</span> {order.userInfo.address}
                     </p>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </article>

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { addressFields } from "@/models/Address";
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -6,36 +7,43 @@ const userSchema = new mongoose.Schema({
         required: [true, "Please provide your name"],
         trim: true,
     },
-    // Sparse: accounts made before usernames existed do not have one yet.
-    username: {
+    // 10-digit mobile number (no +91). This is what customers sign in with.
+    phone: {
         type: String,
+        required: [true, "Please provide your mobile number"],
         unique: true,
-        sparse: true,
-        lowercase: true,
         trim: true,
     },
-    // No longer collected. Kept only so accounts created with an email can
-    // still sign in with it.
-    email: {
-        type: String,
-        lowercase: true,
-    },
+    // bcrypt hash, never the password itself.
     password: {
         type: String,
         required: [true, "Please provide a password"],
-        minlength: 6,
     },
     role: {
         type: String,
         enum: ["user", "admin"],
         default: "user",
     },
-    // Filled in later on the account page; sign-up only asks for the basics.
-    phone: {
-        type: String,
-        trim: true,
-        default: "",
+    // Copied into the session token. Bumping it (password change or admin
+    // reset) makes every older token invalid, signing out other devices.
+    tokenVersion: {
+        type: Number,
+        default: 0,
     },
+    // Set when an admin resets the password: the customer must choose a new
+    // one right after signing in with the temporary password.
+    mustChangePassword: {
+        type: Boolean,
+        default: false,
+    },
+    // Saved delivery addresses (at most MAX_ADDRESSES in lib/address.js).
+    // Exactly one has isDefault while the list is non-empty.
+    addresses: {
+        type: [new mongoose.Schema({ ...addressFields, isDefault: { type: Boolean, default: false } })],
+        default: [],
+    },
+    // Old single free-text address from before addresses had separate
+    // fields. Only shown as a reminder until the customer adds a new one.
     address: {
         type: String,
         trim: true,

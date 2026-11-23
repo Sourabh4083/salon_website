@@ -7,7 +7,7 @@ export function Block({ className = "" }) {
 export function ProductCardSkeleton() {
   return (
     <div>
-      <Block className="aspect-[4/5] w-full" />
+      <Block className="aspect-square w-full" />
       <div className="space-y-2.5 pt-3">
         <Block className="h-3 w-1/3" />
         <Block className="h-5 w-4/5" />

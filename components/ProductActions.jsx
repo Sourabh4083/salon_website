@@ -90,7 +90,7 @@ export default function ProductActions({ product, enquiryHref = null }) {
           <p className="text-sm text-muted">
             Not sure about colour or size?{" "}
             <a href={enquiryHref} target="_blank" rel="noopener noreferrer" className="link">
-              Ask about this wig on WhatsApp
+              Ask about this product on WhatsApp
             </a>
           </p>
         )}

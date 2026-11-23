@@ -3,7 +3,7 @@ import { dbConnect } from "@/lib/dbConnect";
 import { requireAdmin } from "@/lib/auth";
 import Product from "@/models/Product";
 import { getProducts, revalidateProducts } from "@/lib/products";
-import { pickProductFields } from "@/lib/wig";
+import { pickProductFields } from "@/lib/catalog";
 
 
 export async function POST(req) {

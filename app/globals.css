@@ -184,6 +184,14 @@ h3 {
   .label {
     @apply mb-1.5 block text-sm font-medium text-slate-700;
   }
+  /* Required field: small red asterisk after the label text. The alt text
+     after "/" keeps screen readers from reading "star"; the input itself
+     says it is required (required / aria-required). */
+  .label.req::after {
+    content: " *";
+    content: " *" / "";
+    @apply font-semibold text-red-600;
+  }
 
   .pill {
     @apply inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[11px] font-semibold uppercase;
@@ -191,17 +199,8 @@ h3 {
   }
 
   /* Add-to-cart bar on product cards: slides in on hover where hover
-     exists, and is simply always there on touch screens. The "Shop now"
-     tab on the For him / For her panels works the same way. */
+     exists, and is simply always there on touch screens. */
   @media (hover: hover) {
-    .shop-now {
-      transform: translateY(100%);
-      transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-    .group:hover .shop-now,
-    .group:focus-visible .shop-now {
-      transform: none;
-    }
     .quick-add {
       opacity: 0;
       transform: translateY(100%);

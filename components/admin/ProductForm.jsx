@@ -1,18 +1,19 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { X } from "lucide-react";
-import { GENDERS, HAIR_TYPES, BASE_TYPES, LENGTHS, MAX_IMAGES } from "@/lib/wig";
+import { SUITABLE_FOR, MAX_IMAGES } from "@/lib/catalog";
 import { gstPercent } from "@/lib/site";
 
-function Select({ label, name, value, onChange, options }) {
+function Select({ label, name, value, onChange, options, required = false, emptyLabel = "Not specified" }) {
   return (
     <div>
-      <label htmlFor={name} className="label">{label}</label>
-      <select id={name} name={name} value={value} onChange={onChange} className="input">
-        <option value="">Not specified</option>
+      <label htmlFor={name} className={required ? "label req" : "label"}>{label}</label>
+      <select id={name} name={name} value={value} onChange={onChange} className="input" required={required}>
+        <option value="">{emptyLabel}</option>
         {options.map((o) => (
           <option key={o} value={o}>
             {o}
@@ -34,16 +35,29 @@ export default function ProductForm({ product }) {
     mrp: product?.mrp || "",
     stock: product?.stock ?? "",
     category: product?.category || "",
-    gender: product?.gender || "",
-    hairType: product?.hairType || "",
-    baseType: product?.baseType || "",
-    length: product?.length || "",
+    brand: product?.brand || "",
+    size: product?.size || "",
+    suitableFor: product?.suitableFor || "",
     color: product?.color || "",
   });
   // Older products only have the single `image` field.
   const [images, setImages] = useState(
     product?.images?.length ? product.images : product?.image ? [product.image] : []
   );
+
+  // Category names from Admin > Categories. A product saved under a name that
+  // no longer exists keeps it as an option so editing does not silently clear it.
+  const [categories, setCategories] = useState([]);
+  useEffect(() => {
+    fetch("/api/categories", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((list) => setCategories(list.map((c) => c.name)))
+      .catch(() => {});
+  }, []);
+  const categoryOptions =
+    formData.category && !categories.includes(formData.category)
+      ? [...categories, formData.category]
+      : categories;
 
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -117,7 +131,7 @@ export default function ProductForm({ product }) {
         <h2 className="text-xl font-medium">Basics</h2>
 
         <div>
-          <label htmlFor="title" className="label">Name</label>
+          <label htmlFor="title" className="label req">Name</label>
           <input id="title" name="title" value={formData.title} onChange={handleChange} className="input" required />
         </div>
 
@@ -130,13 +144,13 @@ export default function ProductForm({ product }) {
             value={formData.description}
             onChange={handleChange}
             className="input"
-            placeholder="Texture, density, how it is worn, care instructions"
+            placeholder="What it does, how to use it, ingredients"
           />
         </div>
 
         <div className="grid gap-5 sm:grid-cols-3">
           <div>
-            <label htmlFor="price" className="label">Selling price (₹)</label>
+            <label htmlFor="price" className="label req">Selling price (₹)</label>
             <input id="price" name="price" type="number" min="1" step="1" value={formData.price} onChange={handleChange} className="input" required />
             <p className="mt-1 text-xs text-muted">Including {gstPercent}% GST</p>
           </div>
@@ -153,29 +167,35 @@ export default function ProductForm({ product }) {
       </section>
 
       <section className="space-y-5 border-t border-line pt-8">
-        <h2 className="text-xl font-medium">Wig details</h2>
+        <h2 className="text-xl font-medium">Product details</h2>
 
         <div className="grid gap-5 sm:grid-cols-2">
-          <Select label="For" name="gender" value={formData.gender} onChange={handleChange} options={GENDERS} />
-          <Select label="Hair type" name="hairType" value={formData.hairType} onChange={handleChange} options={HAIR_TYPES} />
-          <Select label="Base" name="baseType" value={formData.baseType} onChange={handleChange} options={BASE_TYPES} />
           <div>
-            <label htmlFor="length" className="label">Length</label>
-            <input id="length" name="length" list="length-options" value={formData.length} onChange={handleChange} className="input" placeholder="Short, or 14 inches" />
-            <datalist id="length-options">
-              {LENGTHS.map((l) => (
-                <option key={l} value={l} />
-              ))}
-            </datalist>
+            <Select
+              label="Category"
+              name="category"
+              value={formData.category}
+              onChange={handleChange}
+              options={categoryOptions}
+              emptyLabel="Choose a category"
+              required
+            />
+            <p className="mt-1 text-xs text-muted">
+              <Link href="/admin/categories" className="link">Manage categories</Link>
+            </p>
           </div>
+          <div>
+            <label htmlFor="brand" className="label">Brand</label>
+            <input id="brand" name="brand" value={formData.brand} onChange={handleChange} className="input" placeholder="Walker Tape" />
+          </div>
+          <div>
+            <label htmlFor="size" className="label">Size / quantity</label>
+            <input id="size" name="size" value={formData.size} onChange={handleChange} className="input" placeholder="200 ml, 1 roll, pack of 36" />
+          </div>
+          <Select label="Suitable for" name="suitableFor" value={formData.suitableFor} onChange={handleChange} options={SUITABLE_FOR} />
           <div>
             <label htmlFor="color" className="label">Colour</label>
-            <input id="color" name="color" value={formData.color} onChange={handleChange} className="input" placeholder="Natural black" />
-          </div>
-          <div>
-            <label htmlFor="category" className="label">Category</label>
-            <input id="category" name="category" value={formData.category} onChange={handleChange} className="input" placeholder="Hair patch, Full wig, Topper" />
-            <p className="mt-1 text-xs text-muted">Appears as a section on the homepage.</p>
+            <input id="color" name="color" value={formData.color} onChange={handleChange} className="input" placeholder="Leave empty if it has no colour" />
           </div>
         </div>
       </section>
@@ -183,7 +203,7 @@ export default function ProductForm({ product }) {
       <section className="space-y-4 border-t border-line pt-8">
         <h2 className="text-xl font-medium">Photos</h2>
         <p className="text-sm text-muted">
-          Up to {MAX_IMAGES} photos, under 1 MB each. Portrait photos look best. The first one is the main photo.
+          Up to {MAX_IMAGES} photos, under 1 MB each. Square photos look best. The first one is the main photo.
         </p>
 
         {images.length > 0 && (
@@ -191,7 +211,7 @@ export default function ProductForm({ product }) {
             {images.map((url, i) => (
               <li key={url} className="relative">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt={`Photo ${i + 1}`} className="aspect-[4/5] w-full border border-line object-cover" />
+                <img src={url} alt={`Photo ${i + 1}`} className="aspect-square w-full border border-line object-cover" />
                 <button
                   type="button"
                   onClick={() => removeImage(url)}

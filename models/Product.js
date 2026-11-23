@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { GENDERS, HAIR_TYPES, BASE_TYPES } from "@/lib/wig";
+import { SUITABLE_FOR } from "@/lib/catalog";
 
 const productsSchema = new mongoose.Schema(
     {
@@ -25,10 +25,10 @@ const productsSchema = new mongoose.Schema(
             default: [],
         },
         category: String,
-        gender: { type: String, enum: [...GENDERS, ""], default: "" },
-        hairType: { type: String, enum: [...HAIR_TYPES, ""], default: "" },
-        baseType: { type: String, enum: [...BASE_TYPES, ""], default: "" },
-        length: String,
+        brand: String,
+        // Free text: "200 ml", "1 roll", "pack of 36".
+        size: String,
+        suitableFor: { type: String, enum: [...SUITABLE_FOR, ""], default: "" },
         color: String,
         stock: {
             type: Number,

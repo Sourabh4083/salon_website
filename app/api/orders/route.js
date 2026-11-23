@@ -16,7 +16,7 @@ export async function GET(req) {
 
     // The JWT payload carries `id`, not `_id` — using `_id` here made the
     // filter `{ user: undefined }`, which returned every user's orders.
-    const orders = await Order.find({ user: user.id })
+    const orders = await Order.find({ user: user.id, paymentStatus: "paid" })
       .sort({ createdAt: -1 })
       .populate("cartItem.product")
       .lean();
