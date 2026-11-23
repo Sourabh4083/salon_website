@@ -16,7 +16,7 @@ export default function ContactPage() {
       <h1 className="mt-3 text-4xl font-medium leading-tight sm:text-5xl animate-fade-up delay-100">Contact us</h1>
       <span className="rule mt-6" />
       <p className="mt-6 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
-        Questions about a wig, an order or a salon appointment? Call, message or visit us.
+        Questions about a product, an order or a salon appointment? Call, message or visit us.
       </p>
 
       <div className="mt-10 grid gap-8 md:grid-cols-[1fr_1.4fr] md:gap-12">

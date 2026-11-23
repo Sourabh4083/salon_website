@@ -160,9 +160,9 @@ export default function SalonPage() {
           )}
 
           <p className="mt-6 border-t border-line pt-5 text-sm text-muted">
-            Looking for a wig first?{" "}
+            Need shampoo, adhesive or a wig cap?{" "}
             <Link href="/#products" className="link">
-              Browse the collection
+              Shop wig care online
             </Link>
           </p>
         </aside>

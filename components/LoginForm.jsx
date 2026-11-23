@@ -4,12 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
-import { AtSign, Lock, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
+import { Phone, Lock, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
 import AuthShell from "@/components/AuthShell";
-import { site } from "@/lib/site";
+import { normaliseMobile } from "@/lib/validate";
+import { site, whatsappLink } from "@/lib/site";
 
 export default function LoginForm() {
-  const [form, setForm] = useState({ username: "", password: "" });
+  const [form, setForm] = useState({ phone: "", password: "" });
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
@@ -20,11 +21,16 @@ export default function LoginForm() {
     rawRedirect.startsWith("/") && !rawRedirect.startsWith("//") ? rawRedirect : "/";
   const registerHref =
     redirectPath !== "/" ? `/register?redirect=${encodeURIComponent(redirectPath)}` : "/register";
+  const forgotHref = whatsappLink("Hi, I forgot my password. Please help me reset it.");
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!normaliseMobile(form.phone)) {
+      toast.error("Enter a valid 10-digit mobile number");
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("/api/login", {
@@ -38,12 +44,15 @@ export default function LoginForm() {
       } catch {}
 
       if (res.ok) {
-        toast.success("Welcome back!");
         // Full navigation (not router.push) so the new auth cookie is applied
         // to the middleware, the server-rendered layout and the cart provider
-        // in one go. Otherwise the protected page can load before the client
-        // router picks up the new session.
-        window.location.assign(redirectPath);
+        // in one go.
+        if (data.mustChangePassword) {
+          window.location.assign("/change-password");
+        } else {
+          toast.success("Welcome back!");
+          window.location.assign(redirectPath);
+        }
       } else {
         toast.error(data.error || "Login failed. Please try again.");
         setLoading(false);
@@ -57,7 +66,7 @@ export default function LoginForm() {
   return (
     <AuthShell
       title="Welcome back"
-      subtitle="Sign in to track orders and check out faster."
+      subtitle="Sign in with your mobile number."
       footer={
         <>
           New to {site.wordmark}?{" "}
@@ -69,26 +78,34 @@ export default function LoginForm() {
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="username" className="label">Username</label>
+          <label htmlFor="phone" className="label req">Mobile number</label>
           <div className="relative">
-            <AtSign className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
-              id="username"
-              name="username"
+              id="phone"
+              name="phone"
+              type="tel"
+              inputMode="numeric"
               autoComplete="username"
-              autoCapitalize="none"
-              spellCheck={false}
-              placeholder="Your username"
-              value={form.username}
+              placeholder="98765 43210"
+              value={form.phone}
               onChange={handleChange}
               className="input pl-10"
+              maxLength={16}
               required
             />
           </div>
         </div>
 
         <div>
-          <label htmlFor="password" className="label">Password</label>
+          <div className="flex items-baseline justify-between">
+            <label htmlFor="password" className="label req">Password</label>
+            {forgotHref && (
+              <a href={forgotHref} target="_blank" rel="noopener noreferrer" className="text-xs font-medium text-brand-ink hover:underline">
+                Forgot password?
+              </a>
+            )}
+          </div>
           <div className="relative">
             <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input

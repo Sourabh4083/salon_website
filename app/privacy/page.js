@@ -11,7 +11,7 @@ export default function PrivacyPage() {
     {
       title: "What we collect",
       list: [
-        "When you create an account: your name, username, mobile number and password. The password is stored in scrambled form, so we cannot read it.",
+        "When you create an account: your name, mobile number and password. The password is stored in scrambled form, so we cannot read it.",
         "On your account page, if you choose to add them: your address, gender and date of birth.",
         "When you order: your name, phone number, delivery address, what you bought and what you paid.",
       ],

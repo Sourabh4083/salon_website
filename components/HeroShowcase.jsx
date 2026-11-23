@@ -10,9 +10,9 @@ import { site } from "@/lib/site";
 const ROTATE_MS = 4500;
 
 // Home page hero. The photo changes on its own, when a tab under it is
-// pressed, and when a pointer rests on one of the two shop buttons.
-// `slides` is [{ key, label, src, alt }]; the keys "men" and "women" are the
-// ones the buttons look for.
+// pressed, and when a pointer rests on one of the two buttons.
+// `slides` is [{ key, label, src, alt }]; the "Visit the salon" button
+// previews the slide with key "salon" when there is one.
 export default function HeroShowcase({ slides }) {
   const [active, setActive] = useState(0);
   const [auto, setAuto] = useState(true);
@@ -31,7 +31,7 @@ export default function HeroShowcase({ slides }) {
     paused.current = value;
   };
 
-  // Preview a wearer's photo while their button is hovered or focused.
+  // Preview a slide while its button is hovered or focused.
   const preview = (key) => ({
     onMouseEnter: () => {
       const i = slides.findIndex((s) => s.key === key);
@@ -51,21 +51,21 @@ export default function HeroShowcase({ slides }) {
         <div className="order-2 md:order-1">
           <p className="eyebrow animate-fade-up">{site.strapline}</p>
           <h1 className="mt-4 text-[2.6rem] font-medium leading-[1.05] sm:text-6xl lg:text-7xl animate-fade-up delay-100">
-            Hair that looks
+            Everything
             <br />
-            <em className="font-normal">like your own.</em>
+            <em className="font-normal">your wig needs.</em>
           </h1>
           <p className="mt-6 max-w-md text-base leading-relaxed text-muted sm:text-lg animate-fade-up delay-200">
-            Wigs, hair patches and toppers for men and women. Choose online, or visit
-            the salon and we will fit and style it for you.
+            Shampoo, adhesives, caps and tools to keep your wig or hair patch looking
+            natural. Order online, or visit the salon for advice and fitting.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:*:whitespace-nowrap animate-fade-up delay-300">
-            <Link href="/?gender=Men#products" className="btn-primary group px-7" {...preview("men")}>
-              Shop men&apos;s wigs
+            <Link href="/#products" className="btn-primary group px-7">
+              Shop all products
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
-            <Link href="/?gender=Women#products" className="btn-outline group px-7" {...preview("women")}>
-              Shop women&apos;s wigs
+            <Link href="/salon" className="btn-outline group px-7" {...preview("salon")}>
+              Visit the salon
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>

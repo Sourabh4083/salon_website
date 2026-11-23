@@ -11,8 +11,8 @@ export default function RefundPolicyPage() {
     {
       title: "Returns and exchanges",
       body: [
-        "All sales are final. Wigs, hair patches and toppers are personal hygiene products, so we do not accept returns or exchanges at present.",
-        "Please check the photos, colour, length and details before you order. If you are unsure, call or message us, or visit the salon to see and try the product first.",
+        "All sales are final. Wig shampoos, adhesives, caps and other care products are personal hygiene items that cannot be resold once they leave us, so we do not accept returns or exchanges at present.",
+        "Please check the photos, size, colour and details before you order. If you are unsure, call or message us, or visit the salon to see and try the product first.",
       ],
     },
     {

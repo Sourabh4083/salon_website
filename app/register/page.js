@@ -4,9 +4,9 @@ import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
-import { AtSign, Phone, Lock, User, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
+import { Phone, Lock, User, Eye, EyeOff, Loader2, ArrowRight } from "lucide-react";
 import AuthShell from "@/components/AuthShell";
-import { normaliseUsername, normaliseMobile, USERNAME_HINT } from "@/lib/validate";
+import { normaliseMobile, passwordProblem, PASSWORD_HINT } from "@/lib/validate";
 import { site } from "@/lib/site";
 
 function strength(pw) {
@@ -19,7 +19,7 @@ function strength(pw) {
 }
 
 function RegisterForm() {
-  const [form, setForm] = useState({ name: "", username: "", phone: "", password: "", confirmPassword: "" });
+  const [form, setForm] = useState({ name: "", phone: "", password: "", confirmPassword: "" });
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
@@ -38,12 +38,14 @@ function RegisterForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!normaliseUsername(form.username)) {
-      toast.error(`Username must be ${USERNAME_HINT}`);
+    const phone = normaliseMobile(form.phone);
+    if (!phone) {
+      toast.error("Enter a valid 10-digit mobile number");
       return;
     }
-    if (!normaliseMobile(form.phone)) {
-      toast.error("Enter a valid 10-digit mobile number");
+    const problem = passwordProblem(form.password, phone);
+    if (problem) {
+      toast.error(problem);
       return;
     }
     if (form.password !== form.confirmPassword) {
@@ -88,7 +90,7 @@ function RegisterForm() {
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="name" className="label">Full name</label>
+          <label htmlFor="name" className="label req">Full name</label>
           <div className="relative">
             <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input id="name" name="name" autoComplete="name" placeholder="Aarav Sharma" value={form.name} onChange={handleChange} className="input pl-10" required />
@@ -96,24 +98,16 @@ function RegisterForm() {
         </div>
 
         <div>
-          <label htmlFor="username" className="label">Username</label>
-          <div className="relative">
-            <AtSign className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input id="username" name="username" autoComplete="username" autoCapitalize="none" spellCheck={false} placeholder="aarav_sharma" value={form.username} onChange={handleChange} className="input pl-10" minLength={3} maxLength={20} pattern="[A-Za-z0-9_]+" title={USERNAME_HINT} required />
-          </div>
-          <p className="mt-1.5 text-xs text-muted">{USERNAME_HINT}. You sign in with this.</p>
-        </div>
-
-        <div>
-          <label htmlFor="phone" className="label">Mobile number</label>
+          <label htmlFor="phone" className="label req">Mobile number</label>
           <div className="relative">
             <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input id="phone" name="phone" type="tel" inputMode="numeric" autoComplete="tel-national" placeholder="98765 43210" value={form.phone} onChange={handleChange} className="input pl-10" maxLength={16} required />
+            <input id="phone" name="phone" type="tel" inputMode="numeric" autoComplete="username" placeholder="98765 43210" value={form.phone} onChange={handleChange} className="input pl-10" maxLength={16} required />
           </div>
+          <p className="mt-1.5 text-xs text-muted">You sign in with this number.</p>
         </div>
 
         <div>
-          <label htmlFor="password" className="label">Password</label>
+          <label htmlFor="password" className="label req">Password</label>
           <div className="relative">
             <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
@@ -121,11 +115,11 @@ function RegisterForm() {
               name="password"
               type={show ? "text" : "password"}
               autoComplete="new-password"
-              placeholder="At least 8 characters"
+              placeholder={PASSWORD_HINT}
               value={form.password}
               onChange={handleChange}
               className="input pl-10 pr-11"
-              minLength={6}
+              minLength={8}
               required
             />
             <button type="button" onClick={() => setShow((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-ink" aria-label={show ? "Hide password" : "Show password"}>
@@ -142,10 +136,11 @@ function RegisterForm() {
               <span className="text-xs text-muted">{labels[score]}</span>
             </div>
           )}
+          {!form.password && <p className="mt-1.5 text-xs text-muted">{PASSWORD_HINT}.</p>}
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="label">Confirm password</label>
+          <label htmlFor="confirmPassword" className="label req">Confirm password</label>
           <div className="relative">
             <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <input
@@ -157,7 +152,7 @@ function RegisterForm() {
               value={form.confirmPassword}
               onChange={handleChange}
               className={`input pl-10 ${mismatch ? "border-red-700 focus:border-red-700" : ""}`}
-              minLength={6}
+              minLength={8}
               aria-invalid={mismatch}
               aria-describedby={mismatch ? "confirmPassword-error" : undefined}
               required

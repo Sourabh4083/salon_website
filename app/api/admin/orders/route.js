@@ -13,8 +13,9 @@ export async function GET(req) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
     }
 
-    const orders = await Order.find()
-      .populate("user", "username")
+    // Unpaid orders are abandoned checkouts; they expire on their own.
+    const orders = await Order.find({ paymentStatus: "paid" })
+      .populate("user", "name phone")
       .populate("cartItem.product", "title price")
       .sort({ createdAt: -1 })
       .lean();

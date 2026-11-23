@@ -11,10 +11,9 @@ import { LogoMark } from "@/components/Logo";
 import { formateCurrency } from "@/utils/formatCurrency";
 
 const PRIMARY_LINKS = [
-  { label: "Men", href: "/?gender=Men#products", gender: "men" },
-  { label: "Women", href: "/?gender=Women#products", gender: "women" },
-  { label: "All wigs", href: "/#products", gender: "" },
+  { label: "Shop", href: "/#products" },
   { label: "Salon", href: "/salon" },
+  { label: "Contact", href: "/contact" },
 ];
 
 function SearchBox({ className = "", onSubmitted }) {
@@ -40,9 +39,9 @@ function SearchBox({ className = "", onSubmitted }) {
       <input
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="Search wigs, colour, length"
+        placeholder="Search products, brands"
         className="w-full border-b border-line bg-transparent py-2 pl-6 pr-2 text-sm placeholder:text-slate-400 focus:border-ink focus:outline-none"
-        aria-label="Search wigs"
+        aria-label="Search products"
       />
     </form>
   );
@@ -90,7 +89,7 @@ function UserMenu({ user, onLogout }) {
     return () => document.removeEventListener("mousedown", close);
   }, []);
 
-  const firstName = (user.name || user.username || "Account").split(" ")[0];
+  const firstName = (user.name || "Account").split(" ")[0];
 
   return (
     <div ref={ref} className="relative">
@@ -109,7 +108,7 @@ function UserMenu({ user, onLogout }) {
         <div role="menu" className="card absolute right-0 z-10 mt-1 w-56 py-1 text-sm">
           <div className="border-b border-line px-4 py-3">
             <p className="truncate font-semibold">{user.name}</p>
-            {user.username && <p className="truncate text-xs text-muted">@{user.username}</p>}
+            {user.phone && <p className="truncate text-xs text-muted">{user.phone}</p>}
           </div>
           <AccountLinks
             user={user}
@@ -130,7 +129,6 @@ export default function Navbar({ categories = [] }) {
   const pathname = usePathname();
   const params = useSearchParams();
   const activeCategory = (params.get("category") || "").toLowerCase();
-  const activeGender = (params.get("gender") || "").toLowerCase();
 
   useEffect(() => setIsOpen(false), [pathname, params]);
 
@@ -180,9 +178,8 @@ export default function Navbar({ categories = [] }) {
   const registerHref = loginHref.replace("/login", "/register");
 
   const isActive = (link) => {
-    if (link.href === "/salon") return pathname === "/salon";
-    if (!onHome) return false;
-    return link.gender ? activeGender === link.gender : false;
+    if (link.href.startsWith("/#")) return false;
+    return pathname === link.href;
   };
 
   return (
@@ -336,7 +333,7 @@ export default function Navbar({ categories = [] }) {
                 <div className="mt-3 divide-y divide-line border-y border-line text-sm">
                   <div className="py-3">
                     <p className="truncate font-semibold">{user.name}</p>
-                    {user.username && <p className="truncate text-xs text-muted">@{user.username}</p>}
+                    {user.phone && <p className="truncate text-xs text-muted">{user.phone}</p>}
                   </div>
                   <AccountLinks
                     user={user}

@@ -3,6 +3,53 @@
 import { useEffect, useState } from "react";
 import { formateCurrency } from "@/utils/formatCurrency";
 import { gstPercent } from "@/lib/site";
+import OrderStatusEditor from "@/components/admin/OrderStatusEditor";
+import { addressLines, shippingLabel } from "@/lib/address";
+import toast from "react-hot-toast";
+import { Check, Copy } from "lucide-react";
+
+// The delivery address laid out like a shipping label, with a button that
+// copies it for pasting into the courier's booking form.
+function ShipTo({ address }) {
+  const [copied, setCopied] = useState(false);
+  const label = shippingLabel(address);
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(label);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Couldn't copy. Select the address and copy it instead.");
+    }
+  };
+
+  return (
+    <div className="min-w-0 break-words">
+      <div className="flex items-center justify-between gap-2">
+        <p className="eyebrow">Ship to</p>
+        <button type="button" onClick={copy} className="btn-ghost px-2 py-1 text-xs" aria-label="Copy shipping address">
+          {copied ? <><Check className="h-3.5 w-3.5" /> Copied</> : <><Copy className="h-3.5 w-3.5" /> Copy</>}
+        </button>
+      </div>
+      <p className="mt-1.5 font-medium">
+        {address.name}{" "}
+        <span className="text-xs font-normal uppercase tracking-wider text-muted">({address.type === "work" ? "Work" : "Home"})</span>
+      </p>
+      {addressLines(address).map((line) => (
+        <p key={line} className="text-muted">{line}</p>
+      ))}
+      <p className="mt-1">
+        {[address.phone, address.altPhone].filter(Boolean).map((p, i) => (
+          <span key={p}>
+            {i > 0 && " / "}
+            <a href={`tel:+91${p}`} className="link">{p}</a>
+          </span>
+        ))}
+      </p>
+    </div>
+  );
+}
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState(null);
@@ -46,7 +93,19 @@ export default function AdminOrdersPage() {
                 <p className="text-sm text-muted">{new Date(order.createdAt).toLocaleString("en-IN")}</p>
               </header>
 
+              {order.stockShortfall?.length > 0 && (
+                <p role="alert" className="mt-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700">
+                  <span className="font-semibold">Paid, but out of stock when payment arrived:</span>{" "}
+                  {order.stockShortfall.join(", ")}. Restock or refund from the Razorpay dashboard
+                  {order.razorpayPaymentId && <> (payment <span className="font-mono">{order.razorpayPaymentId}</span>)</>}
+                  , and contact the customer.
+                </p>
+              )}
+
               <div className="mt-4 grid gap-6 text-sm sm:grid-cols-3">
+                {order.shippingAddress ? (
+                  <ShipTo address={order.shippingAddress} />
+                ) : (
                 <div className="min-w-0 break-words">
                   <p className="eyebrow">Customer</p>
                   <p className="mt-1.5 font-medium">{order.userInfo?.name}</p>
@@ -59,6 +118,7 @@ export default function AdminOrdersPage() {
                   {order.userInfo?.email && <p className="text-muted">{order.userInfo.email}</p>}
                   <p className="mt-1 whitespace-pre-line text-muted">{order.userInfo?.address}</p>
                 </div>
+                )}
 
                 <div>
                   <p className="eyebrow">Items</p>
@@ -84,11 +144,18 @@ export default function AdminOrdersPage() {
                     )}
                     <div className="flex justify-between font-semibold"><dt>Total</dt><dd>{formateCurrency(order.totalAmount)}</dd></div>
                   </dl>
-                  <p className="mt-2 capitalize text-muted">
-                    {order.paymentStatus} · {order.deliveryStatus || "pending"}
+                  <p className="mt-2 text-muted">
+                    Paid · <span className="capitalize">{order.deliveryStatus || "pending"}</span>
                   </p>
                 </div>
               </div>
+
+              <OrderStatusEditor
+                order={order}
+                onSaved={(updated) =>
+                  setOrders((list) => list.map((o) => (o._id === updated._id ? { ...o, ...updated } : o)))
+                }
+              />
             </article>
           ))}
         </div>

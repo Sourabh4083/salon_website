@@ -1,16 +1,12 @@
-
 import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
-const protectedRoutes = ["/checkout", "/profile", "/orders", "/my-orders"]
+// This runs on the edge and cannot reach the database, so it only does a fast
+// first check of the signed cookie. The pages and API routes re-check the
+// account in the database (lib/auth.js getCurrentUser), which is what catches
+// signed-out devices and removed admin roles.
+const protectedRoutes = ["/checkout", "/profile", "/orders", "/my-orders", "/change-password"]
 const adminRoutes = ["/admin"]
-// Pages that only make sense when signed out.
-const guestOnlyRoutes = ["/login", "/register"]
-
-// Only same-site paths are honoured, so ?redirect=https://evil.com is ignored.
-function safeRedirect(value) {
-  return value && value.startsWith("/") && !value.startsWith("//") ? value : "/"
-}
 
 async function verify(token) {
   if (!token) return null
@@ -23,47 +19,24 @@ async function verify(token) {
 }
 
 export async function middleware(request) {
+  const { pathname } = request.nextUrl
+  const payload = await verify(request.cookies.get("token")?.value)
 
-  const { pathname, searchParams } = request.nextUrl
-  const token = request.cookies.get("token")?.value;
-
-  // Signed-in users have no business on login/register: send them on to
-  // wherever they were headed, or home.
-  if (guestOnlyRoutes.some(route => pathname.startsWith(route))) {
-    const payload = await verify(token)
-    if (payload) {
-      return NextResponse.redirect(new URL(safeRedirect(searchParams.get("redirect")), request.url))
-    }
-    return NextResponse.next()
+  if (!payload) {
+    return NextResponse.redirect(new URL(`/login?redirect=${encodeURIComponent(pathname)}`, request.url))
   }
 
-  if (![...protectedRoutes, ...adminRoutes].some(route => pathname.startsWith(route))) {
-    return NextResponse.next()
-    
+  // Signed in with a temporary password from an admin reset: nothing else
+  // until a new password is chosen.
+  if (payload.mcp && pathname !== "/change-password") {
+    return NextResponse.redirect(new URL("/change-password", request.url))
   }
 
-
-  if (!token) {
-    
-    const loginUrl = new URL(`/login?redirect=${pathname}`, request.url)
-    return NextResponse.redirect(loginUrl)
-    
+  if (adminRoutes.some(route => pathname.startsWith(route)) && payload.role !== "admin") {
+    return NextResponse.redirect(new URL("/", request.url))
   }
 
-  try {
-    const { payload } = await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET))
-
-    if (adminRoutes.some(route => pathname.startsWith(route))) {
-      if (payload.role !== "admin") {
-        return NextResponse.redirect(new URL("/", request.url))
-      }
-    }
-    return NextResponse.next();
-  } catch (err) {
-    const loginUrl = new URL(`/login?redirect=${pathname}`, request.url)
-    return NextResponse.redirect(loginUrl)
-    
-  }
+  return NextResponse.next()
 }
 
 export const config = {
@@ -75,7 +48,6 @@ export const config = {
     "/admin",
     "/admin/:path*",
     "/my-orders",
-    "/login",
-    "/register",
+    "/change-password",
   ],
 };

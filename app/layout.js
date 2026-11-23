@@ -38,13 +38,11 @@ export const metadata = {
   },
 };
 
-// Strip JWT bookkeeping (iat/exp) and keep only what the UI needs.
-function publicUser(payload) {
-  if (!payload) return null;
-  const { id, username, name, role, profileComplete } = payload;
-  // Sessions from before the flag existed read as incomplete, which is right:
-  // the extra profile fields did not exist then either.
-  return { id, username, name, role, profileComplete: Boolean(profileComplete) };
+// Keep only what the UI needs.
+function publicUser(u) {
+  if (!u) return null;
+  const { id, name, phone, role, profileComplete } = u;
+  return { id, name, phone, role, profileComplete };
 }
 
 export default async function RootLayout({ children }) {

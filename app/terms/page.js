@@ -27,7 +27,7 @@ export default function TermsPage() {
       list: [
         `All prices are in Indian rupees and include ${gstPercent}% GST.`,
         "Any delivery charge is shown in the cart and at checkout before you pay.",
-        "We photograph our wigs as carefully as we can, but colour and shine can look a little different from one screen to another.",
+        "We photograph our products as carefully as we can, but colour and shine can look a little different from one screen to another.",
         "Products are sold while stock lasts. If something you paid for turns out to be unavailable, we will contact you and refund what you paid for it.",
       ],
     },

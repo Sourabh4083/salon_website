@@ -5,7 +5,7 @@ export default function ProductLoading() {
     <main className="container-x pb-28 pt-6 sm:pt-10 md:pb-12">
       <Block className="h-3 w-56" />
       <div className="mt-6 grid gap-8 lg:grid-cols-2 lg:gap-16">
-        <Block className="aspect-[4/5] w-full" />
+        <Block className="aspect-square w-full" />
         <div className="space-y-5">
           <Block className="h-3 w-32" />
           <Block className="h-12 w-3/4" />

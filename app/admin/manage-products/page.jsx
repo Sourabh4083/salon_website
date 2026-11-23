@@ -24,8 +24,8 @@ export default async function ManageProductsPage() {
         price: p.price || 0,
         image: p.image || p.images?.[0] || "",
         category: p.category || "",
-        gender: p.gender || "",
-        hairType: p.hairType || "",
+        brand: p.brand || "",
+        size: p.size || "",
         stock: p.stock ?? 0,
     }))
 
@@ -41,7 +41,7 @@ export default async function ManageProductsPage() {
             </div>
 
             {products.length === 0 ? (
-                <p className="card mt-8 p-8 text-center text-muted">No products yet. Add your first wig to open the shop.</p>
+                <p className="card mt-8 p-8 text-center text-muted">No products yet. Add your first product to open the shop.</p>
             ) : (
                 <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {products.map((product) => (

@@ -1,18 +1,17 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { dbConnect } from "@/lib/dbConnect";
-import { getCurrentUser, setSessionCookie } from "@/lib/auth";
-import { normaliseUsername, normaliseMobile, USERNAME_HINT } from "@/lib/validate";
+import { getCurrentUser, setSessionCookie, BCRYPT_ROUNDS } from "@/lib/auth";
+import { normaliseMobile, passwordProblem } from "@/lib/validate";
 import User from "@/models/User";
 
 const GENDERS = ["", "male", "female", "other"];
+const PHONE_TAKEN = "This mobile number is already used by another account";
 
 function publicProfile(user) {
   return {
     name: user.name,
-    username: user.username || "",
     phone: user.phone || "",
-    address: user.address || "",
     gender: user.gender || "",
     // yyyy-mm-dd, which is what <input type="date"> reads and writes.
     dateOfBirth: user.dateOfBirth ? new Date(user.dateOfBirth).toISOString().slice(0, 10) : "",
@@ -42,19 +41,13 @@ export async function PATCH(req) {
     }
 
     const body = await req.json();
-    const name = String(body.name || "").trim();
-    const address = String(body.address || "").trim();
+    const name = String(body.name || "").trim().slice(0, 80);
     const gender = String(body.gender || "");
     const currentPassword = String(body.currentPassword || "");
     const newPassword = String(body.newPassword || "");
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
-    }
-
-    const username = normaliseUsername(body.username);
-    if (!username) {
-      return NextResponse.json({ error: `Username must be ${USERNAME_HINT}` }, { status: 400 });
     }
 
     const phone = normaliseMobile(body.phone);
@@ -74,8 +67,11 @@ export async function PATCH(req) {
       }
     }
 
-    if (newPassword && newPassword.length < 6) {
-      return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
+    if (newPassword) {
+      const problem = passwordProblem(newPassword, phone);
+      if (problem) {
+        return NextResponse.json({ error: problem }, { status: 400 });
+      }
     }
 
     await dbConnect();
@@ -84,42 +80,39 @@ export async function PATCH(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Anything that changes how the owner signs in needs the current password.
-    const usernameChanged = username !== (user.username || "");
-    if (usernameChanged || newPassword) {
+    // The mobile number is the login ID, so changing it or the password needs
+    // the current password. Stops someone at an unlocked phone taking over.
+    const phoneChanged = phone !== user.phone;
+    if (phoneChanged || newPassword) {
       const isMatch = currentPassword && (await bcrypt.compare(currentPassword, user.password));
       if (!isMatch) {
         return NextResponse.json({ error: "Current password is incorrect" }, { status: 400 });
       }
     }
 
-    if (usernameChanged) {
-      const taken = await User.findOne({ username, _id: { $ne: user._id } });
-      if (taken) {
-        return NextResponse.json({ error: "That username is already taken" }, { status: 400 });
-      }
+    if (phoneChanged && (await User.exists({ phone, _id: { $ne: user._id } }))) {
+      return NextResponse.json({ error: PHONE_TAKEN }, { status: 400 });
     }
 
     user.name = name;
-    user.username = username;
     user.phone = phone;
-    user.address = address;
     user.gender = gender;
     user.dateOfBirth = dateOfBirth;
     if (newPassword) {
-      user.password = await bcrypt.hash(newPassword, 10);
+      user.password = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+      // Signs out every other device; this one gets a fresh cookie below.
+      user.tokenVersion = (user.tokenVersion || 0) + 1;
     }
     await user.save();
 
-    // Name, username and the profile flag live in the token, so issue a new one.
     return setSessionCookie(
       NextResponse.json({ message: "Profile updated", profile: publicProfile(user) }),
       user
     );
   } catch (error) {
-    // Two accounts racing for the same username: the unique index catches it.
+    // Two accounts racing for the same number: the unique index catches it.
     if (error?.code === 11000) {
-      return NextResponse.json({ error: "That username is already taken" }, { status: 400 });
+      return NextResponse.json({ error: PHONE_TAKEN }, { status: 400 });
     }
     console.error("Profile update error:", error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });

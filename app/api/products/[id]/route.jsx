@@ -2,7 +2,7 @@ import { dbConnect } from "@/lib/dbConnect";
 import { requireAdmin } from "@/lib/auth";
 import Product from "@/models/Product";
 import { revalidateProducts } from "@/lib/products";
-import { pickProductFields } from "@/lib/wig";
+import { pickProductFields } from "@/lib/catalog";
 import { NextResponse } from "next/server";
 
 
